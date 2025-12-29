@@ -7,14 +7,14 @@ import posthog from "posthog-js";
 interface Props {
     slug: string;
     title: string;
-    img: string;
+    image: string;
     location: string;
     time: string;
     date: string;
     description: string;
 }
 
-const EventCard = ({ slug, title, img, location, time, date, description }: Props) => {
+const EventCard = ({ slug, title, image, location, time, date, description }: Props) => {
     const handleClick = () => {
         posthog.capture('event_card_clicked', {
             event_slug: slug,
@@ -27,7 +27,7 @@ const EventCard = ({ slug, title, img, location, time, date, description }: Prop
 
     return (
         <Link href={`/events/${slug}`} id="event-card" onClick={handleClick}>
-            <Image src={img} alt={title} width={410} height={300} className="poster" priority />
+            <Image src={image} alt={title} width={410} height={300} className="poster" priority />
 
             <div className="flex grow gap-2">
                 <Image src="/icons/pin.svg" alt={location} width={14} height={14} />

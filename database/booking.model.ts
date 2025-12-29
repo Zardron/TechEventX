@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model, Document, Types } from 'mongoose';
-import { Event, IEvent } from './event.model';
+import Event from './event.model';
 
 export interface IBooking extends Document {
     eventId: Types.ObjectId;
@@ -39,15 +39,14 @@ const bookingSchema = new Schema<IBooking>(
 );
 
 // Validate event exists before saving booking
-(bookingSchema as any).pre('save', async function (this: IBooking, next: (err?: Error) => void) {
+(bookingSchema as any).pre('save', async function (this: IBooking) {
     try {
         const event = await Event.findById(this.eventId);
         if (!event) {
-            return next(new Error(`Event with ID ${this.eventId} does not exist`));
+            throw new Error(`Event with ID ${this.eventId} does not exist`);
         }
-        next();
     } catch (error) {
-        next(error instanceof Error ? error : new Error('Failed to validate event reference'));
+        throw error instanceof Error ? error : new Error('Failed to validate event reference');
     }
 });
 

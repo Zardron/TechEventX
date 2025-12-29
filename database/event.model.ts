@@ -189,7 +189,7 @@ const eventSchema = new Schema<IEvent>(
 );
 
 // Auto-generate slug and normalize date/time before saving
-(eventSchema as any).pre('save', function (this: IEvent, next: (err?: Error) => void) {
+(eventSchema as any).pre('save', function (this: IEvent) {
     if (this.isModified('title') || !this.slug) {
         this.slug = generateSlug(this.title);
     }
@@ -198,7 +198,7 @@ const eventSchema = new Schema<IEvent>(
         try {
             this.date = normalizeDate(this.date);
         } catch (error) {
-            return next(error instanceof Error ? error : new Error('Date normalization failed'));
+            throw error instanceof Error ? error : new Error('Date normalization failed');
         }
     }
 
@@ -206,15 +206,13 @@ const eventSchema = new Schema<IEvent>(
         try {
             this.time = normalizeTime(this.time);
         } catch (error) {
-            return next(error instanceof Error ? error : new Error('Time normalization failed'));
+            throw error instanceof Error ? error : new Error('Time normalization failed');
         }
     }
-
-    next();
 });
 
 // Unique index on slug for fast lookups
 eventSchema.index({ slug: 1 }, { unique: true });
 
-export const Event: Model<IEvent> = mongoose.models.Event || mongoose.model<IEvent>('Event', eventSchema);
+export default mongoose.models.Event || mongoose.model<IEvent>('Event', eventSchema) as Model<IEvent>;
 
