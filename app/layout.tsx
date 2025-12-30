@@ -5,6 +5,7 @@ import LightRays from '../components/LightRays';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import ConditionalFooter from "@/components/ConditionalFooter";
 
 const schibstedGrotesk = Schibsted_Grotesk({
   variable: "--font-schibsted-grotesk",
@@ -27,38 +28,36 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${schibstedGrotesk.variable} ${martianMono.variable} min-h-screen antialiased`}
-      >
-        <ScrollToTop />
-        <Navbar />
-        <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
-          <LightRays
-            raysOrigin="top-center-offset"
-            raysColor="#5dfeca"
-            raysSpeed={0.5}
-            lightSpread={0.9}
-            rayLength={1.4}
-            followMouse={true}
-            mouseInfluence={0.02}
-            noiseAmount={0.0}
-            distortion={0.01}
-            className="w-full h-full"
-          />
-        </div>
-        <div className="container mx-auto px-10 py-10 pt-16 relative z-10">
-          {children}
-        </div>
-        <div className="container mx-auto px-10 relative z-10">
-          <Footer />
-        </div>
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body
+                className={`${schibstedGrotesk.variable} ${martianMono.variable} min-h-screen antialiased`}
+            >
+                <ScrollToTop />
+                <Navbar />
+                <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
+                    <LightRays
+                        raysOrigin="top-center-offset"
+                        raysColor="#5dfeca"
+                        raysSpeed={0.5}
+                        lightSpread={0.9}
+                        rayLength={1.4}
+                        followMouse={true}
+                        mouseInfluence={0.02}
+                        noiseAmount={0.0}
+                        distortion={0.01}
+                        className="w-full h-full"
+                    />
+                </div>
+                <div className="container mx-auto px-10 py-10 pt-16 relative z-10">
+                    {children}
+                </div>
+                <ConditionalFooter />
+            </body>
+        </html>
+    );
 }
