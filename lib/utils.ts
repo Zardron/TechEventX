@@ -62,6 +62,41 @@ export function handleSuccessResponse(
   return NextResponse.json(response, { status });
 }
 
+// Convert 24-hour time format (HH:MM) to 12-hour format with AM/PM
+export function formatTimeWithAMPM(time: string): string {
+  const [hours, minutes] = time.split(':').map(Number);
+
+  if (isNaN(hours) || isNaN(minutes)) {
+    return time; // Return original if invalid format
+  }
+
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const twelveHour = hours % 12 || 12; // Convert 0 to 12 for midnight
+
+  return `${twelveHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+// Convert date from YYYY-MM-DD format to "Month Day, Year" format
+export function formatDateToReadable(date: string): string {
+  try {
+    const dateObj = new Date(date);
+
+    if (isNaN(dateObj.getTime())) {
+      return date; // Return original if invalid date
+    }
+
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+
+    return dateObj.toLocaleDateString('en-US', options);
+  } catch {
+    return date; // Return original if parsing fails
+  }
+}
+
 // Handle Image Upload to Cloudinary
 export async function handleImageUpload(
   file: File | null,

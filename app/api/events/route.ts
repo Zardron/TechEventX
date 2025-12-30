@@ -27,7 +27,14 @@ export async function POST(req: NextRequest) {
 
         event.image = uploadResult.url;
 
-        const createdEvent = await Event.create(event);
+        const tags = JSON.parse(formData.get('tags') as string);
+        const agenda = JSON.parse(formData.get('agenda') as string);
+
+        const createdEvent = await Event.create({
+            ...event,
+            tags: tags,
+            agenda: agenda,
+        });
 
         return handleSuccessResponse('Event Created Successfully', { event: createdEvent }, 201);
     } catch (error) {
