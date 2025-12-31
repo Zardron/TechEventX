@@ -108,7 +108,7 @@ const SignInPage = () => {
             {/* Main Glassmorphism Container */}
             <div className="w-full max-w-5xl mx-auto bg-dark-100/40 backdrop-blur-2xl border border-blue/20 rounded-2xl shadow-2xl overflow-hidden relative animate-scale-in">
                 {/* Subtle inner glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-blue/5 pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col lg:flex-row">
                     {/* Left Panel - Branding & Visuals */}

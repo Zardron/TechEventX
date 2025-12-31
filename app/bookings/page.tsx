@@ -173,7 +173,7 @@ const BookingsPage = () => {
                         <p className="text-foreground/60 text-lg">No bookings found</p>
                         <Link
                             href="/events"
-                            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue/20 to-primary/20 text-blue border border-blue/30 hover:shadow-[0_0_25px_rgba(148,234,255,0.25)] transition-all duration-300"
+                            className="px-6 py-2.5 rounded-xl bg-linear-to-r from-blue/20 to-primary/20 text-blue border border-blue/30 hover:shadow-[0_0_25px_rgba(148,234,255,0.25)] transition-all duration-300"
                         >
                             Browse Events
                         </Link>
