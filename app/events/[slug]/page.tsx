@@ -15,8 +15,8 @@ const InfoBadge = ({ icon, label, value }: { icon: string, label: string, value:
                 <Image src={icon} alt={label} width={20} height={20} className="opacity-90" />
             </div>
             <div className="flex flex-col">
-                <span className="text-xs text-light-200 uppercase tracking-wider">{label}</span>
-                <span className="text-sm font-semibold text-light-100 mt-0.5">{value}</span>
+                <span className="text-xs text-light-200 uppercase tracking-wider uppercase">{label}</span>
+                <span className="text-sm font-semibold text-light-100 mt-0.5 capitalize">{value}</span>
             </div>
         </div>
     )
@@ -285,7 +285,7 @@ const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }> 
                                             <p className="text-sm text-light-200 mb-4">Be the first to book your spot.</p>
                                         )}
                                     </div>
-                                    <BookEvent />
+                                    <BookEvent eventSlug={slug} />
                                 </div>
                             </div>
                         </div>
