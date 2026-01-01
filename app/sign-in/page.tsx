@@ -4,87 +4,43 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useSignIn } from "@/lib/hooks/api/auth.queries";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 const SignInPage = () => {
     const router = useRouter();
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-    const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
+    const { user, isAuthenticated } = useAuth();
+    const signInMutation = useSignIn();
 
     // Check if user is already authenticated and redirect
     useEffect(() => {
-        const checkAuth = async () => {
-            if (typeof window === 'undefined') return;
-
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            // Immediately redirect if token exists (optimistic check)
-            // Then verify token is valid in background
-            router.replace('/');
-
-            // Verify token is valid in background
-            try {
-                const response = await fetch('/api/auth/sign-in', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    // Token is invalid, remove it
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                }
-            } catch (error) {
-                // Error verifying token, remove it
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+        if (isAuthenticated) {
+            if (user?.role === 'admin') {
+                router.replace('/admin-dashboard');
+            } else {
+                router.replace('/');
             }
-        };
-
-        checkAuth();
-    }, [router]);
+        }
+    }, [isAuthenticated, router, user?.role]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        setError('');
         setSuccess('');
 
-        try {
-            const response = await fetch('/api/auth/sign-in', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+        signInMutation.mutate(
+            { email, password, role: 'user' },
+            {
+                onSuccess: (data) => {
+                    setSuccess(data.message || 'Login successful!');
                 },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccess(data.message || 'Login successful!');
-                // Store token in localStorage
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                }
-                // Redirect to home page after a short delay
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
-            } else {
-                setError(data.message || 'Something went wrong. Please try again.');
+                onError: (error) => {
+                    // Error is handled by the mutation
+                },
             }
-        } catch (error) {
-            setError('Failed to sign in. Please try again later.');
-        } finally {
-            setIsSubmitting(false);
-        }
+        );
     }
 
     return (
@@ -251,9 +207,11 @@ const SignInPage = () => {
                                         </div>
 
                                         {/* Error Message */}
-                                        {error && (
+                                        {signInMutation.isError && (
                                             <div className="bg-red-500/10 border border-red-500/50 rounded-lg px-4 py-2.5 text-red-400 text-xs">
-                                                {error}
+                                                {signInMutation.error instanceof Error
+                                                    ? signInMutation.error.message
+                                                    : 'Something went wrong. Please try again.'}
                                             </div>
                                         )}
 
@@ -267,10 +225,10 @@ const SignInPage = () => {
                                         {/* Sign In Button */}
                                         <button
                                             type="submit"
-                                            disabled={isSubmitting}
-                                            className="bg-primary hover:bg-primary/90 w-full cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-base font-semibold text-black transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/50 mt-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                            disabled={signInMutation.isPending}
+                                            className="bg-primary hover:bg-primary/90 w-full cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-base font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/50 mt-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                         >
-                                            {isSubmitting ? 'Signing in...' : 'Sign in'}
+                                            {signInMutation.isPending ? 'Signing in...' : 'Sign in'}
                                         </button>
                                     </div>
                                 </form>

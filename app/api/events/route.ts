@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Event from "@/database/event.model";
-import { handleApiError, handleImageUpload, handleSuccessResponse } from "@/lib/utils";
+import { handleApiError, handleSuccessResponse } from "@/lib/utils";
+import { handleImageUpload } from "@/lib/cloudinary";
 
 export async function POST(req: NextRequest) {
     try {

@@ -120,10 +120,10 @@ const OrganizerSlider = ({ organizers }: OrganizerSliderProps) => {
             onMouseLeave={() => setIsPaused(false)}
         >
             {/* Fade gradient on the left */}
-            <div className="absolute left-0 top-0 bottom-0 w-40 bg-linear-to-r from-[#030708] via-[#030708]/95 via-[#030708]/70 via-[#030708]/30 to-transparent z-10 pointer-events-none" />
+            <div className="absolute left-0 top-0 bottom-0 w-40 bg-linear-to-r from-background via-background/95 via-background/70 via-background/30 to-transparent z-10 pointer-events-none" />
 
             {/* Fade gradient on the right */}
-            <div className="absolute right-0 top-0 bottom-0 w-40 bg-linear-to-l from-[#030708] via-[#030708]/95 via-[#030708]/70 via-[#030708]/30 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-40 bg-linear-to-l from-background via-background/95 via-background/70 via-background/30 to-transparent z-10 pointer-events-none" />
 
             {/* Slider Container */}
             <div className="overflow-x-hidden overflow-y-visible px-4">

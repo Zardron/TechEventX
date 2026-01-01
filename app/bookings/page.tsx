@@ -1,75 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Monitor, List } from "lucide-react";
 import { formatTimeWithAMPM, formatDateToReadable } from "@/lib/formatters";
-
-interface Booking {
-    id: string;
-    eventId: string;
-    event: {
-        id: string;
-        title: string;
-        slug: string;
-        date: string;
-        time: string;
-        venue: string;
-        location: string;
-        image: string;
-        mode: string;
-    };
-    createdAt: string;
-    updatedAt: string;
-}
+import { useBookings } from "@/lib/hooks/api/bookings.queries";
 
 const BookingsPage = () => {
-    const router = useRouter();
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: bookingsData, isLoading: loading, error } = useBookings();
+    const bookings = bookingsData?.bookings || [];
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showAllBookings, setShowAllBookings] = useState(false);
-
-    useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    router.push('/sign-in');
-                    return;
-                }
-
-                const response = await fetch('/api/bookings', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    router.push('/sign-in');
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch bookings');
-                }
-
-                const data = await response.json();
-                setBookings(data.bookings || []);
-            } catch (error) {
-                console.error('Error fetching bookings:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchBookings();
-    }, [router]);
 
     // Calendar functions
     const getDaysInMonth = (date: Date) => {

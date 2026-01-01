@@ -1,67 +1,29 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { useCreateBooking, useHasBookedEvent } from "@/lib/hooks/api/bookings.queries";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 interface BookEventProps {
     eventSlug: string;
 }
 
 const BookEvent = ({ eventSlug }: BookEventProps) => {
-    const [submitted, setSubmitted] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
     const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
     const [mounted, setMounted] = useState<boolean>(false);
-    const [alreadyBooked, setAlreadyBooked] = useState<boolean>(false);
-    const [checkingBooking, setCheckingBooking] = useState<boolean>(true);
     const router = useRouter();
-
-    const checkIfAlreadyBooked = useCallback(async () => {
-        try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                setCheckingBooking(false);
-                return;
-            }
-
-            const response = await fetch('/api/bookings', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const bookings = data.bookings || [];
-
-                // Check if any booking matches the current event slug
-                const hasBooked = bookings.some((booking: any) => booking.event?.slug === eventSlug);
-                setAlreadyBooked(hasBooked);
-
-                // If already booked, show as submitted
-                if (hasBooked) {
-                    setSubmitted(true);
-                }
-            }
-        } catch (err) {
-            console.error('Error checking booking status:', err);
-        } finally {
-            setCheckingBooking(false);
-        }
-    }, [eventSlug]);
+    const { isAuthenticated } = useAuth();
+    const { hasBooked } = useHasBookedEvent(eventSlug);
+    const createBookingMutation = useCreateBooking();
 
     useEffect(() => {
         setMounted(true);
-        checkIfAlreadyBooked();
-    }, [checkIfAlreadyBooked]);
+    }, []);
 
     const handleBookNowClick = () => {
-        const token = localStorage.getItem('token');
-
-        if (!token) {
+        if (!isAuthenticated) {
             router.push('/sign-in');
             return;
         }
@@ -69,64 +31,27 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
         setShowConfirmation(true);
     };
 
-    const handleConfirmBooking = async () => {
-        setIsLoading(true);
-        setError(null);
+    const handleConfirmBooking = () => {
         setShowConfirmation(false);
-
-        try {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                router.push('/sign-in');
-                return;
-            }
-
-            const response = await fetch('/api/bookings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ eventSlug }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to book event');
-            }
-
-            setSubmitted(true);
-            setAlreadyBooked(true);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred while booking');
-        } finally {
-            setIsLoading(false);
-        }
+        createBookingMutation.mutate(eventSlug, {
+            onError: (error) => {
+                // Error is handled by the mutation state
+            },
+        });
     };
 
     const handleCancelBooking = () => {
         setShowConfirmation(false);
-    }
+    };
 
-    if (checkingBooking) {
-        return (
-            <div id="book-event">
-                <div className="flex items-center justify-center py-4">
-                    <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-            </div>
-        );
-    }
+    const isLoading = createBookingMutation.isPending;
+    const error = createBookingMutation.isError ? createBookingMutation.error : null;
+    const isBooked = hasBooked || createBookingMutation.isSuccess;
 
     return (
         <>
             <div id="book-event">
-                {submitted || alreadyBooked ? (
+                {isBooked ? (
                     <div className="flex flex-col items-center gap-4 text-center py-4">
                         <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
                             <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,17 +59,19 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                             </svg>
                         </div>
                         <p className="text-light-100 text-base font-medium">
-                            {alreadyBooked ? "You've already booked this event!" : "Thank you for booking your spot!"}
+                            {hasBooked ? "You've already booked this event!" : "Thank you for booking your spot!"}
                         </p>
                         <p className="text-light-200 text-sm">
-                            {alreadyBooked ? "Your spot is confirmed. Please check your email for updates." : "Your booking has been confirmed. Please wait for an email update with further details."}
+                            {hasBooked ? "Your spot is confirmed. Please check your email for updates." : "Your booking has been confirmed. Please wait for an email update with further details."}
                         </p>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {error && (
                             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-                                <p className="text-red-400 text-sm">{error}</p>
+                                <p className="text-red-400 text-sm">
+                                    {error instanceof Error ? error.message : 'An error occurred while booking'}
+                                </p>
                             </div>
                         )}
                         <button
@@ -190,7 +117,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                 </button>
                                 <button
                                     onClick={handleConfirmBooking}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-dark-100 font-semibold hover:bg-primary/90 transition-colors duration-200"
+                                    className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors duration-200"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (

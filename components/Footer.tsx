@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import AnimateOnScroll from "./AnimateOnScroll";
 import { formatOrganizerCount } from "@/lib/formatters";
 import { IEvent } from "@/database/event.model";
+import { useEvents } from "@/lib/hooks/api/events.queries";
 
 const Footer = () => {
     const pathname = usePathname();
@@ -14,30 +15,15 @@ const Footer = () => {
     const [email, setEmail] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const [organizerCount, setOrganizerCount] = useState<string>("5+");
+    const { data: eventsData } = useEvents();
 
     // Hide newsletter and entire footer on sign-in page
     const isSignInPage = pathname === '/sign-in';
 
-    // Fetch events and calculate organizer count
-    useEffect(() => {
-        const fetchOrganizerCount = async () => {
-            try {
-                const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
-                const response = await fetch(`${BASE_URL}/api/events`);
-                const { events } = await response.json();
-
-                if (events && events.length > 0) {
-                    const uniqueOrganizers = new Set(events.map((event: IEvent) => event.organizer)).size;
-                    setOrganizerCount(formatOrganizerCount(uniqueOrganizers));
-                }
-            } catch (error) {
-                console.error('Failed to fetch organizer count:', error);
-            }
-        };
-
-        fetchOrganizerCount();
-    }, []);
+    // Calculate organizer count from events data
+    const organizerCount = eventsData?.events && eventsData.events.length > 0
+        ? formatOrganizerCount(new Set(eventsData.events.map((event: IEvent) => event.organizer)).size)
+        : "5+";
 
     const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -93,7 +79,7 @@ const Footer = () => {
                         <div className="relative z-10 max-w-3xl mx-auto text-center">
                             <div className="flex items-center justify-center gap-3 mb-4">
                                 <Image src="/icons/calendar.svg" alt="Newsletter" width={32} height={32} className="animate-pulse" />
-                                <h2 className="text-3xl md:text-4xl font-bold bg-linear-to-r from-white via-blue to-white bg-clip-text text-transparent">
+                                <h2 className="text-3xl md:text-4xl font-bold bg-linear-to-r from-foreground via-blue to-foreground bg-clip-text text-transparent">
                                     Never Miss an Event
                                 </h2>
                             </div>
@@ -113,7 +99,7 @@ const Footer = () => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="bg-primary hover:bg-primary/90 rounded-full px-8 py-4 text-lg font-semibold text-black disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/50 whitespace-nowrap"
+                                    className="bg-primary hover:bg-primary/90 rounded-full px-8 py-4 text-lg font-semibold text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary/50 whitespace-nowrap"
                                 >
                                     {isSubmitting ? 'Subscribing...' : 'Subscribe Now'}
                                 </button>
@@ -146,7 +132,7 @@ const Footer = () => {
                                 />
                                 <div className="absolute inset-0 bg-blue/20 rounded-full blur-xl group-hover:bg-blue/30 transition-colors" />
                             </div>
-                            <p className="text-2xl font-bold bg-linear-to-r from-white to-blue bg-clip-text text-transparent">
+                            <p className="text-2xl font-bold bg-linear-to-r from-foreground to-blue bg-clip-text text-transparent">
                                 TechHub
                             </p>
                         </Link>
@@ -207,19 +193,19 @@ const Footer = () => {
                             </h3>
                             <ul className="space-y-3">
                                 {[
-                                    { href: '#', label: 'About Us' },
-                                    { href: '#', label: 'Contact' },
-                                    { href: '#', label: 'Help Center' },
-                                    { href: '#', label: 'Privacy Policy' },
+                                    { href: '/about-us', label: 'About Us' },
+                                    { href: '/contact', label: 'Contact' },
+                                    { href: '/help-center', label: 'Help Center' },
+                                    { href: '/privacy-policy', label: 'Privacy Policy' },
                                 ].map((link) => (
                                     <li key={link.label}>
-                                        <a
+                                        <Link
                                             href={link.href}
                                             className="group flex items-center gap-2 text-light-200 hover:text-blue transition-all duration-300 text-base"
                                         >
                                             <span className="w-0 group-hover:w-2 h-0.5 bg-blue transition-all duration-300" />
                                             {link.label}
-                                        </a>
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>
@@ -265,9 +251,9 @@ const Footer = () => {
                         © {currentYear} <span className="text-blue font-semibold">TechHub</span> created by <span className="text-primary">Zardron</span>. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6 text-sm text-light-200">
-                        <a href="#" className="hover:text-blue transition-colors">Terms of Service</a>
+                        <Link href="/terms-of-service" className="hover:text-blue transition-colors">Terms of Service</Link>
                         <span className="text-border-dark">•</span>
-                        <a href="#" className="hover:text-blue transition-colors">Privacy Policy</a>
+                        <Link href="/privacy-policy" className="hover:text-blue transition-colors">Privacy Policy</Link>
                     </div>
                 </div>
             </div>

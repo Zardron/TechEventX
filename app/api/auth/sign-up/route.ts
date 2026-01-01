@@ -32,6 +32,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const user = await User.create({
             name: name.trim(),
             email: email.toLowerCase().trim(),
+            role: 'user',
             password: password, // Will be hashed automatically by the model
         });
 
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             id: user._id.toString(),
             name: user.name,
             email: user.email,
+            role: user.role,
         };
 
         return handleSuccessResponse(

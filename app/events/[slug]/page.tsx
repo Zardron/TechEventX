@@ -1,12 +1,12 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { use } from "react";
 import Image from "next/image";
 import BookEvent from "@/components/BookEvent";
-import { getSimilarEventsBySlug } from "@/lib/action/event.actions";
 import { IEvent } from "@/database/event.model";
 import EventCard from "@/components/EventCard";
 import { formatTimeWithAMPM, formatDateToReadable } from "@/lib/utils";
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import { useEventBySlug, useEvents } from "@/lib/hooks/api/events.queries";
 
 const InfoBadge = ({ icon, label, value }: { icon: string, label: string, value: string }) => {
     return (
@@ -42,18 +42,38 @@ const AgendaItem = ({ item, index, total }: { item: string, index: number, total
     )
 }
 
-const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
-    const { slug } = await params;
-    const request = await fetch(`${BASE_URL}/api/events/${slug}`);
-    const { event: { title, description, overview, image, venue, location, date, time, mode, audience, agenda, organizer, tags } } = await request.json();
+const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => {
+    const { slug } = use(params);
+    const { data: eventData, isLoading, error } = useEventBySlug(slug);
+    const { data: allEventsData } = useEvents();
 
-    if (!description) {
-        return notFound();
+    if (isLoading) {
+        return (
+            <div className="w-full mt-14 -mx-10 max-sm:-mx-5 min-h-screen flex items-center justify-center">
+                <div className="text-light-200">Loading event...</div>
+            </div>
+        );
     }
+
+    if (error || !eventData?.event) {
+        return (
+            <div className="w-full mt-14 -mx-10 max-sm:-mx-5 min-h-screen flex items-center justify-center">
+                <div className="text-light-200">Event not found</div>
+            </div>
+        );
+    }
+
+    const { event } = eventData;
+    const { title, description, overview, image, venue, location, date, time, mode, audience, agenda, organizer, tags } = event;
 
     const bookings: number = 10;
 
-    const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
+    // Find similar events based on tags (client-side filtering)
+    const similarEvents: IEvent[] = allEventsData?.events
+        ? allEventsData.events
+            .filter((e: IEvent) => e.slug !== slug && e.tags?.some(tag => tags?.includes(tag)))
+            .slice(0, 6) // Limit to 6 similar events
+        : [];
 
     return (
         <div className="w-full mt-14 -mx-10 max-sm:-mx-5">

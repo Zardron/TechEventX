@@ -1,18 +1,27 @@
+"use client";
+
 import EventCard from "@/components/EventCard"
 import { IEvent } from "@/database/event.model";
 import AnimateOnScroll from "@/components/AnimateOnScroll";
 import Image from "next/image";
+import { useEvents } from "@/lib/hooks/api/events.queries";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-const EventsPage = async () => {
-    const response = await fetch(`${BASE_URL}/api/events`);
-    const { events } = await response.json();
-
-    const allEvents: IEvent[] = events || [];
+const EventsPage = () => {
+    const { data: eventsData, isLoading } = useEvents();
+    const allEvents: IEvent[] = eventsData?.events || [];
 
     // Calculate unique locations
     const uniqueLocations = new Set(allEvents.map((e: IEvent) => e.location)).size;
+
+    if (isLoading) {
+        return (
+            <section className="py-8">
+                <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-light-200">Loading events...</div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="py-8">

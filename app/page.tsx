@@ -1,3 +1,5 @@
+"use client";
+
 import EventCard from "@/components/EventCard"
 import ExploreBtn from "@/components/ExploreBtn"
 import AnimateOnScroll from "@/components/AnimateOnScroll"
@@ -6,12 +8,11 @@ import Link from "next/link";
 import Image from "next/image";
 import OrganizerSlider from "@/components/OrganizerSlider";
 import { formatOrganizerCount } from "@/lib/formatters";
+import { useEvents } from "@/lib/hooks/api/events.queries";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-const page = async () => {
-  const response = await fetch(`${BASE_URL}/api/events`);
-  const { events } = await response.json();
+const Page = () => {
+  const { data: eventsData, isLoading } = useEvents();
+  const events = eventsData?.events || [];
 
   const featuredEvents = events && events.length > 0 ? events.slice(0, 3) : [];
   const totalEvents = events?.length || 0;
@@ -21,6 +22,16 @@ const page = async () => {
     ? new Set(events.map((event: IEvent) => event.organizer)).size
     : 0;
   const organizerCount = formatOrganizerCount(uniqueOrganizers);
+
+  if (isLoading) {
+    return (
+      <section id="home">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-light-200">Loading events...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="home">
@@ -127,7 +138,7 @@ const page = async () => {
             <AnimateOnScroll delay={500} variant="slide" className="glass p-6 rounded-lg hover:scale-105 hover:shadow-lg transition-all duration-300">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 bg-blue rounded-full flex items-center justify-center">
-                  <span className="text-black font-bold">✓</span>
+                  <span className="text-white dark:text-foreground font-bold">✓</span>
                 </div>
                 <h3 className="text-xl font-semibold">One-Click Booking</h3>
               </div>
@@ -218,4 +229,4 @@ const page = async () => {
   )
 }
 
-export default page
+export default Page

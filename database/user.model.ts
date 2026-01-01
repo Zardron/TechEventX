@@ -5,6 +5,7 @@ export interface IUser extends Document {
     email: string;
     password: string;
     name: string;
+    role: 'admin' | 'user';
     createdAt: Date;
     updatedAt: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
@@ -51,6 +52,11 @@ const userSchema = new Schema<IUser>(
                 validator: (v: string) => v.trim().length > 0 && v.trim().length <= 100,
                 message: 'Name must be between 1 and 100 characters',
             },
+        },
+        role: {
+            type: String,
+            enum: ['admin', 'user'],
+            default: 'user',
         },
     },
     {

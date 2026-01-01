@@ -61,6 +61,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             id: user._id.toString(),
             name: user.name,
             email: user.email,
+            role: user.role,
         };
 
         return handleSuccessResponse("Login successful", { user: userData, token });
@@ -99,6 +100,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             id: user._id.toString(),
             name: user.name,
             email: user.email,
+            role: user.role,
         };
 
         return handleSuccessResponse("User retrieved successfully", { user: userData });

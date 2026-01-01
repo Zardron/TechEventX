@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useSignUp } from "@/lib/hooks/api/auth.queries";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 const SignUpPage = () => {
     const router = useRouter();
@@ -12,45 +14,16 @@ const SignUpPage = () => {
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-    const [apiError, setApiError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
+    const { isAuthenticated } = useAuth();
+    const signUpMutation = useSignUp();
 
     // Check if user is already authenticated and redirect
     useEffect(() => {
-        const checkAuth = async () => {
-            if (typeof window === 'undefined') return;
-
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            // Immediately redirect if token exists (optimistic check)
-            // Then verify token is valid in background
+        if (isAuthenticated) {
             router.replace('/');
-
-            // Verify token is valid in background
-            try {
-                const response = await fetch('/api/auth/sign-in', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    // Token is invalid, remove it
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                }
-            } catch (error) {
-                // Error verifying token, remove it
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-            }
-        };
-
-        checkAuth();
-    }, [router]);
+        }
+    }, [isAuthenticated, router]);
 
     // Password validation regex: at least 8 characters, contains uppercase, lowercase, number, and special character
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -94,45 +67,24 @@ const SignUpPage = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setApiError('');
         setSuccess('');
 
         if (!validateForm()) {
             return;
         }
 
-        setIsSubmitting(true);
-
-        try {
-            const response = await fetch('/api/auth/sign-up', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+        signUpMutation.mutate(
+            { name, email, password, role: 'user' },
+            {
+                onSuccess: (data) => {
+                    setSuccess(data.message || 'Account created successfully!');
+                    // Redirect is handled by useEffect when isAuthenticated changes
                 },
-                body: JSON.stringify({ name, email, password }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccess(data.message || 'Account created successfully!');
-                // Store token in localStorage
-                if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                }
-                // Redirect to home page after a short delay
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1500);
-            } else {
-                setApiError(data.message || 'Something went wrong. Please try again.');
+                onError: (error) => {
+                    // Error is handled by the mutation
+                },
             }
-        } catch (error) {
-            setApiError('Failed to create account. Please try again later.');
-        } finally {
-            setIsSubmitting(false);
-        }
+        );
     }
 
     return (
@@ -379,9 +331,11 @@ const SignUpPage = () => {
                                         </div>
 
                                         {/* API Error Message */}
-                                        {apiError && (
+                                        {signUpMutation.isError && (
                                             <div className="bg-red-500/10 border border-red-500/50 rounded-lg px-4 py-2.5 text-red-400 text-xs">
-                                                {apiError}
+                                                {signUpMutation.error instanceof Error
+                                                    ? signUpMutation.error.message
+                                                    : 'Something went wrong. Please try again.'}
                                             </div>
                                         )}
 
@@ -395,10 +349,10 @@ const SignUpPage = () => {
                                         {/* Sign Up Button */}
                                         <button
                                             type="submit"
-                                            disabled={isSubmitting}
-                                            className="bg-primary hover:bg-primary/90 w-full cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-base font-semibold text-black transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/50 mt-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                            disabled={signUpMutation.isPending}
+                                            className="bg-primary hover:bg-primary/90 w-full cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-base font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/50 mt-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                         >
-                                            {isSubmitting ? 'Creating account...' : 'Sign up'}
+                                            {signUpMutation.isPending ? 'Creating account...' : 'Sign up'}
                                         </button>
                                     </div>
                                 </form>
