@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 
 export default function ConditionalNavbar() {
     const pathname = usePathname();
-    const hideNavbar = pathname === "/admin-dashboard";
+    const hideNavbar = pathname.startsWith("/admin-dashboard");
 
     if (hideNavbar) {
         return null;

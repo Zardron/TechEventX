@@ -39,7 +39,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                     aria-label="User menu"
                 >
                     <span className="text-lg font-semibold text-foreground truncate">
-                        Welcome, <span className="text-blue">{user?.name}</span>
+                        Welcome, <span className="text-blue capitalize">{user?.name}</span>
                     </span>
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/30 via-primary/20 to-blue/30 border-2 border-blue/40 flex items-center justify-center text-xs font-bold text-foreground shadow-[0_0_15px_rgba(148,234,255,0.2)] cursor-pointer">
                         {getUserInitials(user?.name) || <User className="w-4 h-4" />}

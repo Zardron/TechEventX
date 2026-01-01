@@ -202,7 +202,7 @@ const BookingsPage = () => {
 
                         {/* Selected Date Bookings */}
                         <div className="lg:col-span-1">
-                            <div className="bg-dark-200/50 backdrop-blur-xl rounded-xl border border-blue/20 p-6 sticky top-32">
+                            <div className="bg-dark-200/50 backdrop-blur-xl rounded-xl border border-blue/20 p-6 sticky top-20">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-semibold text-foreground">
                                         {showAllBookings

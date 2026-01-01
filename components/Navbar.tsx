@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
-import { Menu, X, User, ChevronDown, Calendar, LogOut } from "lucide-react"
+import { Menu, X, User, ChevronDown, Calendar, LogOut, LayoutDashboardIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/hooks/use-auth"
 import ThemeToggle from "./ThemeToggle"
@@ -14,8 +14,7 @@ const Navbar = () => {
     const pathname = usePathname()
     const dropdownRef = useRef<HTMLDivElement>(null)
     const { user, isAuthenticated, clearAuth } = useAuth()
-
-    console.log(user)
+    const role = user?.role
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -157,14 +156,25 @@ const Navbar = () => {
                                         </div>
 
                                         <div className="py-2">
-                                            <Link
-                                                href="/bookings"
-                                                onClick={() => setIsDropdownOpen(false)}
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/90 hover:bg-blue/10 hover:text-blue transition-colors duration-200"
-                                            >
-                                                <Calendar className="w-4 h-4" />
-                                                My Bookings
-                                            </Link>
+                                            {role === 'admin' ? (
+                                                <Link
+                                                    href="/admin-dashboard"
+                                                    onClick={() => setIsDropdownOpen(false)}
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/90 hover:bg-blue/10 hover:text-blue transition-colors duration-200"
+                                                >
+                                                    <LayoutDashboardIcon className="w-4 h-4" />
+                                                    Admin Dashboard
+                                                </Link>
+                                            ) : (
+                                                <Link
+                                                    href="/bookings"
+                                                    onClick={() => setIsDropdownOpen(false)}
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/90 hover:bg-blue/10 hover:text-blue transition-colors duration-200"
+                                                >
+                                                    <Calendar className="w-4 h-4" />
+                                                    My Bookings
+                                                </Link>
+                                            )}
                                             <div className="border-t border-blue/10 my-1" />
                                             <button
                                                 onClick={handleSignOut}
@@ -258,14 +268,25 @@ const Navbar = () => {
                             {isAuthenticated ? (
                                 <>
                                     <div className="border-t border-blue/10 my-1" />
-                                    <Link
-                                        href="/bookings"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-3 text-sm text-foreground/90 hover:bg-blue/10 hover:text-blue transition-colors duration-200"
-                                    >
-                                        <Calendar className="w-4 h-4" />
-                                        My Bookings
-                                    </Link>
+                                    {role === 'admin' ? (
+                                        <Link
+                                            href="/admin-dashboard"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-3 text-sm text-foreground/90 hover:bg-blue/10 hover:text-blue transition-colors duration-200"
+                                        >
+                                            <Calendar className="w-4 h-4" />
+                                            My Bookings
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            href="/admin-dashboard"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-3 text-sm text-foreground/90 hover:bg-blue/10 hover:text-blue transition-colors duration-200"
+                                        >
+                                            <LayoutDashboardIcon className="w-4 h-4" />
+                                            Admin Dashboard
+                                        </Link>
+                                    )}
                                     <div className="border-t border-blue/10 my-1" />
                                     <button
                                         onClick={() => {
