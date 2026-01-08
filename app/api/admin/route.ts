@@ -145,6 +145,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 );
             }
         }
+        
+        // Handle Mongoose validation errors
+        if (error && typeof error === 'object' && 'name' in error) {
+            const mongooseError = error as any;
+            if (mongooseError.name === 'ValidationError') {
+                const validationErrors = mongooseError.errors || {};
+                const errorMessages = Object.values(validationErrors)
+                    .map((err: any) => err.message)
+                    .join(', ');
+                return NextResponse.json(
+                    { message: `Validation error: ${errorMessages || mongooseError.message}` },
+                    { status: 400 }
+                );
+            }
+            // Handle duplicate key error (E11000)
+            if (mongooseError.code === 11000) {
+                const field = Object.keys(mongooseError.keyPattern || {})[0] || 'field';
+                return NextResponse.json(
+                    { message: `${field} is already registered` },
+                    { status: 409 }
+                );
+            }
+        }
+        
         return handleApiError(error);
     }
 }
