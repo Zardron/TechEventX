@@ -14,7 +14,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
     const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
     const [mounted, setMounted] = useState<boolean>(false);
     const router = useRouter();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
     const { hasBooked } = useHasBookedEvent(eventSlug);
     const createBookingMutation = useCreateBooking();
 
@@ -47,6 +47,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
     const isLoading = createBookingMutation.isPending;
     const error = createBookingMutation.isError ? createBookingMutation.error : null;
     const isBooked = hasBooked || createBookingMutation.isSuccess;
+    const isAdminOrOrganizer = user?.role === 'admin' || user?.role === 'organizer';
 
     return (
         <>
@@ -65,6 +66,22 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                             {hasBooked ? "Your spot is confirmed. Please check your email for updates." : "Your booking has been confirmed. Please wait for an email update with further details."}
                         </p>
                     </div>
+                ) : isAdminOrOrganizer ? (
+                    <div className="flex flex-col items-center gap-4 text-center py-4">
+                        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+                            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                        </div>
+                        <p className="text-light-100 text-base font-medium">
+                            Booking not available
+                        </p>
+                        <p className="text-light-200 text-sm">
+                            {user?.role === 'admin' 
+                                ? "Admins cannot book events." 
+                                : "Organizers cannot book events."}
+                        </p>
+                    </div>
                 ) : (
                     <div className="space-y-3">
                         {error && (
@@ -77,7 +94,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                         <button
                             onClick={handleBookNowClick}
                             className="button-submit w-full"
-                            disabled={isLoading}
+                            disabled={isLoading || isAdminOrOrganizer}
                         >
                             {isLoading ? (
                                 <span className="flex items-center justify-center gap-2">
