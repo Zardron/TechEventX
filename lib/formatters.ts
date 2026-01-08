@@ -31,6 +31,34 @@ export function formatTimeWithAMPM(time: string): string {
     return `${twelveHour}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
+// Convert Date object or time string (HH:MM) to 12-hour format with AM/PM
+export function formatDateTo12Hour(date: Date | string): string {
+    let hours: number;
+    let minutes: number;
+
+    if (typeof date === 'string') {
+        // Handle time string format (HH:MM)
+        const [h, m] = date.split(':').map(Number);
+        if (isNaN(h) || isNaN(m)) {
+            return date; // Return original if invalid format
+        }
+        hours = h;
+        minutes = m;
+    } else {
+        // Handle Date object
+        if (isNaN(date.getTime())) {
+            return ''; // Return empty string if invalid date
+        }
+        hours = date.getHours();
+        minutes = date.getMinutes();
+    }
+
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const twelveHour = hours % 12 || 12; // Convert 0 to 12 for midnight
+
+    return `${twelveHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 // Convert date from YYYY-MM-DD format to "Month Day, Year" format
 export function formatDateToReadable(date: string): string {
     try {

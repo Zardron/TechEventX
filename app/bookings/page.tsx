@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Monitor, List } from "lucide-react";
-import { formatTimeWithAMPM, formatDateToReadable } from "@/lib/formatters";
+import { formatDateToReadable, formatDateTo12Hour } from "@/lib/formatters";
 import { useBookings } from "@/lib/hooks/api/bookings.queries";
 
 const BookingsPage = () => {
@@ -253,7 +253,7 @@ const BookingsPage = () => {
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <Clock className="w-3.5 h-3.5" />
-                                                            <span>{formatTimeWithAMPM(booking.event.time)}</span>
+                                                            <span>{formatDateTo12Hour(booking.event.time)}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <MapPin className="w-3.5 h-3.5" />
@@ -295,7 +295,7 @@ const BookingsPage = () => {
                                                     <div className="space-y-1.5 text-sm text-foreground/60">
                                                         <div className="flex items-center gap-2">
                                                             <Clock className="w-3.5 h-3.5" />
-                                                            <span>{formatTimeWithAMPM(booking.event.time)}</span>
+                                                            <span>{formatDateTo12Hour(booking.event.time)}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <MapPin className="w-3.5 h-3.5" />
@@ -365,7 +365,7 @@ const BookingsPage = () => {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Clock className="w-4 h-4" />
-                                                <span>{formatTimeWithAMPM(booking.event.time)}</span>
+                                                <span>{formatDateTo12Hour(booking.event.time)}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <MapPin className="w-4 h-4" />

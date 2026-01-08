@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { formatDateTo12Hour } from "@/lib/formatters";
 
 interface Props {
     slug: string;
@@ -54,7 +55,7 @@ const EventCard = ({ slug, title, image, location, time, date, description }: Pr
                     </div>
                     <div className="flex items-center gap-2">
                         <Image src="/icons/clock.svg" alt={time} width={16} height={16} className="opacity-70" />
-                        <p className="time font-medium">{time}</p>
+                        <p className="time font-medium">{formatDateTo12Hour(time)}</p>
                     </div>
                 </div>
 

@@ -5,7 +5,8 @@ import Image from "next/image";
 import BookEvent from "@/components/BookEvent";
 import { IEvent } from "@/database/event.model";
 import EventCard from "@/components/EventCard";
-import { formatTimeWithAMPM, formatDateToReadable } from "@/lib/utils";
+import { formatDateToReadable } from "@/lib/utils";
+import { formatDateTo12Hour } from "@/lib/formatters";
 import { useEventBySlug, useEvents } from "@/lib/hooks/api/events.queries";
 
 const InfoBadge = ({ icon, label, value }: { icon: string, label: string, value: string }) => {
@@ -65,6 +66,23 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
 
     const { event } = eventData;
     const { title, description, overview, image, venue, location, date, time, mode, audience, agenda, organizer, tags } = event;
+    
+    // Extract organizer name (handle cases where organizer field contains descriptions)
+    const getOrganizerName = (organizerText: string): string => {
+        // If it's a short string (likely just a name), return as is
+        if (organizerText.length < 50) {
+            return organizerText;
+        }
+        // Extract name before common verbs like "organizes", "presents", "hosts", etc.
+        const match = organizerText.match(/^([^,\.]+?)\s+(?:organizes|presents|hosts|runs|creates|launches)/i);
+        if (match) {
+            return match[1].trim();
+        }
+        // If no pattern matches, return first 30 characters
+        return organizerText.substring(0, 30).trim();
+    };
+    
+    const organizerName = getOrganizerName(organizer);
 
     const bookings: number = 10;
 
@@ -148,7 +166,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                                 <InfoBadge
                                     icon="/icons/clock.svg"
                                     label="Time"
-                                    value={formatTimeWithAMPM(time)}
+                                    value={formatDateTo12Hour(time)}
                                 />
                                 <InfoBadge
                                     icon="/icons/mode.svg"
@@ -186,7 +204,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                                         <Image src="/icons/clock.svg" alt="Time" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Time</p>
-                                            <p className="text-base font-semibold text-light-100">{formatTimeWithAMPM(time)}</p>
+                                            <p className="text-base font-semibold text-light-100">{formatDateTo12Hour(time)}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
@@ -208,6 +226,13 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Audience</p>
                                             <p className="text-base font-semibold text-light-100">{audience}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                        <Image src="/icons/audience.svg" alt="Organizer" width={20} height={20} className="mt-1 opacity-80" />
+                                        <div>
+                                            <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Organizer</p>
+                                            <p className="text-base font-semibold text-light-100">{organizerName}</p>
                                         </div>
                                     </div>
                                 </div>

@@ -6,7 +6,8 @@ import { useEvents } from "@/lib/hooks/api/events.queries";
 import { DataTable, type Column } from "@/components/DataTable";
 import { IEvent } from "@/database/event.model";
 import { Button } from "@/components/ui/button";
-import { formatDateToReadable, formatTimeWithAMPM } from "@/lib/utils";
+import { formatDateToReadable } from "@/lib/utils";
+import { formatDateTo12Hour } from "@/lib/formatters";
 import { useState } from "react";
 import {
     AlertDialog,
@@ -94,7 +95,7 @@ export default function AllEventsPage() {
             header: "Time",
             render: (value: string) => {
                 if (!value) return "-";
-                return formatTimeWithAMPM(value);
+                return formatDateTo12Hour(value);
             },
         },
         {
