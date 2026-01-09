@@ -123,7 +123,7 @@ const Footer = () => {
                             <div className="relative">
                                 <Image
                                     src="/icons/logo.png"
-                                    alt="TechHub Logo"
+                                    alt="TechEventX Logo"
                                     width={40}
                                     height={40}
                                     className="group-hover:scale-110 transition-transform duration-300"
@@ -133,7 +133,7 @@ const Footer = () => {
                                 <div className="absolute inset-0 bg-blue/20 rounded-full blur-xl group-hover:bg-blue/30 transition-colors" />
                             </div>
                             <p className="text-2xl font-bold bg-linear-to-r from-foreground to-blue bg-clip-text text-transparent">
-                                TechHub
+                                TechEventX
                             </p>
                         </Link>
                         <p className="text-light-200 text-base leading-relaxed max-w-md">
@@ -248,7 +248,7 @@ const Footer = () => {
                 {/* Copyright */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
                     <p className="text-light-200 text-sm">
-                        © {currentYear} <span className="text-blue font-semibold">TechHub</span> created by <span className="text-primary">Zardron</span>. All rights reserved.
+                        © {currentYear} <span className="text-blue font-semibold">TechEventX</span> created by <span className="text-primary">Zardron</span>. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6 text-sm text-light-200">
                         <Link href="/terms-of-service" className="hover:text-blue transition-colors">Terms of Service</Link>

@@ -87,14 +87,14 @@ const Navbar = () => {
                             <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-blue/10 border border-blue/20 flex items-center justify-center p-2.5 shadow-[0_0_20px_rgba(148,234,255,0.1)] group-hover:shadow-[0_0_25px_rgba(148,234,255,0.2)] group-hover:border-blue/40 transition-all duration-300">
                                 <Image
                                     src="/icons/logo.png"
-                                    alt="TechHub Logo"
+                                    alt="TechEventX Logo"
                                     width={24}
                                     height={24}
                                     className="w-6 h-6"
                                 />
                             </div>
                             <span className="text-xl font-bold text-foreground font-schibsted-grotesk group-hover:text-blue/90 transition-colors duration-200">
-                                TechHub
+                                TechEventX
                             </span>
                         </Link>
                         <div className="flex items-center gap-2">
