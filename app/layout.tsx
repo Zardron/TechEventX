@@ -22,7 +22,7 @@ const martianMono = Martian_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "TechHub - Your Tech Event Platform",
+    title: "TechEventX - Your Tech Event Platform",
     description: "Discover and attend tech events worldwide. Hackathons, developer conferences, tech workshops, and more.",
     icons: {
         icon: "/icons/logo.png",

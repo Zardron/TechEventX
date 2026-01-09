@@ -98,7 +98,7 @@ const Page = () => {
       {/* Features Section */}
       <AnimateOnScroll variant="fade">
         <div className="my-20 space-y-12">
-          <h2 className="text-3xl font-bold text-center">Why Choose TechHub?</h2>
+          <h2 className="text-3xl font-bold text-center">Why Choose TechEventX?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <AnimateOnScroll delay={0} variant="slide" className="glass p-6 rounded-lg hover:scale-105 hover:shadow-lg transition-all duration-300">
               <div className="flex items-center gap-3 mb-4">
