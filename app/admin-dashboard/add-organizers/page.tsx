@@ -158,9 +158,9 @@ export default function AddOrganizersPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             <div>
-                <h1 className="text-3xl font-bold">Add Organizers</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Add Organizers</h1>
                 <p className="text-muted-foreground mt-2">
                     Add a new event organizer to the platform
                 </p>

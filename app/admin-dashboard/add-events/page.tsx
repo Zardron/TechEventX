@@ -300,9 +300,9 @@ export default function AddEventsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             <div>
-                <h1 className="text-3xl font-bold">Add Events</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Add Events</h1>
                 <p className="text-muted-foreground mt-2">
                     Add a new event to the platform
                 </p>
@@ -320,7 +320,7 @@ export default function AddEventsPage() {
                         </div>
 
                     <form onSubmit={handleSubmit} className="p-6">
-                        <div className="space-y-6">
+                        <div className="space-y-4 sm:space-y-6">
                             {/* Title */}
                             <FormInput
                                 id="title"
