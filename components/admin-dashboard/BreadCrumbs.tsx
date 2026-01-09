@@ -46,14 +46,14 @@ const BreadCrumbs = () => {
     const MenuLink = currentItem?.href;
 
     return (
-        <div className="flex items-center gap-2">
-            <p className="text-sm font-medium">Dashboard</p>
-            <ChevronRightIcon className="w-4 h-4 text-gray-500" />
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
+            <p className="text-xs sm:text-sm font-medium whitespace-nowrap">Dashboard</p>
+            <ChevronRightIcon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 shrink-0" />
 
             <Link href={MenuLink || '/'}>
                 <div className="flex items-center gap-1 cursor-pointer">
-                    {Icon && <Icon className="w-4 h-4 text-blue" />}
-                    <p className="text-sm font-medium capitalize">{lastSegment !== 'admin-dashboard' ? lastSegment : 'Home'}</p>
+                    {Icon && <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-blue shrink-0" />}
+                    <p className="text-xs sm:text-sm font-medium capitalize whitespace-nowrap">{lastSegment !== 'admin-dashboard' ? lastSegment : 'Home'}</p>
                 </div>
 
             </Link>

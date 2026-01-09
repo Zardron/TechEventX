@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
+import { useGetAppeals } from "@/lib/hooks/api/appeals.queries"
 
 const sideBarItems = [
     {
@@ -83,6 +84,12 @@ const sideBarItems = [
 const SideBar = () => {
     const pathname = usePathname()
     const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
+    const { data: appealsData } = useGetAppeals()
+    
+    // Calculate pending appeals count
+    const pendingAppealsCount = appealsData?.appeals?.filter(
+        (appeal) => appeal.status === 'pending'
+    ).length || 0
 
     // Auto-expand dropdown if current path matches any dropdown item
     useEffect(() => {
@@ -129,9 +136,9 @@ const SideBar = () => {
     return (
         <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border">
             {/* Logo Section */}
-            <div className="flex items-center py-4 px-6 border-b border-sidebar-border">
-                <Link href="/admin-dashboard" className="flex items-center gap-3 cursor-pointer">
-                    <div className="relative  shrink-0">
+            <div className="flex items-center py-3 sm:py-4 px-4 sm:px-6 border-b border-sidebar-border">
+                <Link href="/admin-dashboard" className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+                    <div className="relative shrink-0">
                         <Image
                             src="/icons/logo.png"
                             alt="logo"
@@ -140,7 +147,7 @@ const SideBar = () => {
                             className="object-contain"
                         />
                     </div>
-                    <h3 className="text-2xl font-semibold text-sidebar-foreground cursor-pointer">TechHub</h3>
+                    <h3 className="text-xl sm:text-2xl font-semibold text-sidebar-foreground cursor-pointer whitespace-nowrap">TechHub</h3>
                 </Link>
             </div>
 
@@ -248,9 +255,16 @@ const SideBar = () => {
                                     <Icon className={`w-5 h-5 shrink-0 transition-colors duration-200 ${isItemActive ? 'text-primary' : 'group-hover:text-primary'
                                         }`} />
 
-                                    <span className="text-sm font-medium">
+                                    <span className="flex-1 text-sm font-medium">
                                         {item.label}
                                     </span>
+                                    
+                                    {/* Show pending appeals badge for Ban Appeals */}
+                                    {item.label === "Ban Appeals" && pendingAppealsCount > 0 && (
+                                        <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
+                                            {pendingAppealsCount}
+                                        </span>
+                                    )}
                                 </Link>
                             )}
                         </div>
