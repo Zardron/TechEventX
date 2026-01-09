@@ -41,13 +41,23 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // Get unique organizers from events
-        const uniqueOrganizers = await Event.distinct('organizer');
-        
-        // Sort alphabetically
-        const sortedOrganizers = uniqueOrganizers.sort();
+        // Get all organizers from the Organizer collection (exclude soft-deleted)
+        const organizers = await Organizer.find({
+            deleted: { $ne: true }
+        }).sort({ name: 1 });
 
-        return handleSuccessResponse("Organizers fetched successfully", sortedOrganizers);
+        // Format organizers for response
+        const organizerData = organizers.map(org => ({
+            id: org._id.toString(),
+            name: org.name,
+            description: org.description,
+            logo: org.logo,
+            website: org.website,
+            createdAt: org.createdAt,
+            updatedAt: org.updatedAt,
+        }));
+
+        return handleSuccessResponse("Organizers fetched successfully", organizerData);
     } catch (error) {
         return handleApiError(error);
     }

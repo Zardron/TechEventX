@@ -5,11 +5,21 @@ import { IOrganizer } from "@/database/organizer.model";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
+export interface OrganizerData {
+    id: string;
+    name: string;
+    description?: string;
+    logo?: string;
+    website?: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export const useGetAllOrganizers = () => {
     const { token } = useAuthStore();
     const router = useRouter();
 
-    return useQuery<{ message: string; data: string[] }>({
+    return useQuery<{ message: string; data: OrganizerData[] }>({
         queryKey: ['admin', 'organizers'],
         queryFn: async () => {
             if (!token) {
