@@ -12,19 +12,20 @@ const SignInPage = () => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
-    const { user, isAuthenticated } = useAuth();
+    const { user, isAuthenticated, isInitializing } = useAuth();
     const signInMutation = useSignIn();
 
     // Check if user is already authenticated and redirect
+    // Wait for auth initialization to complete before redirecting
     useEffect(() => {
-        if (isAuthenticated) {
+        if (!isInitializing && isAuthenticated) {
             if (user?.role === 'admin') {
                 router.replace('/admin-dashboard');
             } else {
                 router.replace('/');
             }
         }
-    }, [isAuthenticated, router, user?.role]);
+    }, [isAuthenticated, isInitializing, router, user?.role]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
