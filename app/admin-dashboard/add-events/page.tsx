@@ -19,7 +19,7 @@ export default function AddEventsPage() {
         location: "",
         date: "",
         time: "",
-        mode: "online" as "online" | "offline" | "hybrid",
+        mode: "Virtual" as "Virtual" | "Onsite" | "Hybrid",
         audience: "",
         organizer: "",
         tags: [] as string[],
@@ -156,7 +156,7 @@ export default function AddEventsPage() {
                     location: "",
                     date: "",
                     time: "",
-                    mode: "online",
+                    mode: "Virtual",
                     audience: "",
                     organizer: "",
                     tags: [],
@@ -515,9 +515,9 @@ export default function AddEventsPage() {
                                     value={formData.mode}
                                     onChange={handleChange}
                                     options={[
-                                        { value: "online", label: "Online" },
-                                        { value: "offline", label: "Offline" },
-                                        { value: "hybrid", label: "Hybrid" },
+                                        { value: "Virtual", label: "Virtual" },
+                                        { value: "Onsite", label: "Onsite" },
+                                        { value: "Hybrid", label: "Hybrid" },
                                     ]}
                                     error={errors.mode}
                                     required
@@ -676,7 +676,7 @@ export default function AddEventsPage() {
                                         location: "",
                                         date: "",
                                         time: "",
-                                        mode: "online",
+                                        mode: "Virtual",
                                         audience: "",
                                         organizer: "",
                                         tags: [],
@@ -772,19 +772,19 @@ export default function AddEventsPage() {
                                     <div className="flex items-start gap-2">
                                         <span className="text-green-500 mt-0.5">•</span>
                                         <div>
-                                            <span className="font-medium">Online:</span> Virtual events accessible from anywhere
+                                            <span className="font-medium">Virtual:</span> Virtual events accessible from anywhere
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <span className="text-blue-500 mt-0.5">•</span>
                                         <div>
-                                            <span className="font-medium">Offline:</span> In-person events at a physical location
+                                            <span className="font-medium">Onsite:</span> In-person events at a physical location
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <span className="text-purple-500 mt-0.5">•</span>
                                         <div>
-                                            <span className="font-medium">Hybrid:</span> Combination of online and offline attendance
+                                            <span className="font-medium">Hybrid:</span> Combination of virtual and onsite attendance
                                         </div>
                                     </div>
                                 </div>

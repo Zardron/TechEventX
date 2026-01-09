@@ -97,16 +97,16 @@ export default function AllEventsPage() {
             header: "Mode",
             render: (value: string) => {
                 const modeColors: Record<string, string> = {
-                    online: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-                    offline: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-                    hybrid: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+                    Virtual: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+                    Onsite: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+                    Hybrid: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
                 };
                 return (
                     <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${modeColors[value] || "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
                             }`}
                     >
-                        {value.charAt(0).toUpperCase() + value.slice(1)}
+                        {value}
                     </span>
                 );
             },
@@ -160,9 +160,9 @@ export default function AllEventsPage() {
                             key: "mode",
                             label: "Mode",
                             options: [
-                                { value: "online", label: "Online" },
-                                { value: "offline", label: "Offline" },
-                                { value: "hybrid", label: "Hybrid" },
+                                { value: "Virtual", label: "Virtual" },
+                                { value: "Onsite", label: "Onsite" },
+                                { value: "Hybrid", label: "Hybrid" },
                             ],
                         },
                     ]}
