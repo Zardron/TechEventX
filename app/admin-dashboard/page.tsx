@@ -276,23 +276,23 @@ export default function AdminDashboardPage() {
         });
 
     return (
-        <div className="space-y-6 overflow-x-hidden max-w-full">
+        <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="min-w-0">
+                <div>
                     <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
                     <p className="text-muted-foreground mt-2 text-sm sm:text-base">
                         Welcome to the admin dashboard. Manage your platform from here.
                     </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                    <label htmlFor="timeRange" className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                <div className="flex items-center gap-2">
+                    <label htmlFor="timeRange" className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
                         Time Range:
                     </label>
                     <select
                         id="timeRange"
                         value={timeRange}
                         onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                        className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-full sm:w-auto min-w-[140px]"
+                        className="h-9 rounded-md border border-input bg-background px-2 sm:px-3 py-1 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
                         <option value="1month">Last 1 Month</option>
                         <option value="3months">Last 3 Months</option>
@@ -303,7 +303,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full max-w-full">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatCard
                     title="Total Users"
                     value={totals.users}
@@ -334,23 +334,23 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Charts Section */}
-            <div className="grid gap-6 md:grid-cols-2 w-full max-w-full">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 {/* Growth Over Time Chart */}
-                <div className="p-4 sm:p-6 border rounded-lg bg-card shadow-sm overflow-x-hidden w-full max-w-full">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                <div className="p-3 sm:p-6 border rounded-lg bg-card shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4">
                         <h3 className="text-base sm:text-lg font-semibold">Growth Over Time</h3>
                         <select
                             value={growthChartType}
                             onChange={(e) => setGrowthChartType(e.target.value as ChartType)}
-                            className="h-8 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-full sm:w-auto min-w-[120px]"
+                            className="h-8 rounded-md border border-input bg-background px-2 sm:px-3 py-1 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                             <option value="area">Area Chart</option>
                             <option value="line">Line Chart</option>
                             <option value="bar">Bar Chart</option>
                         </select>
                     </div>
-                    <div className="w-full max-w-full overflow-hidden" style={{ width: '100%', maxWidth: '100%' }}>
-                        <ResponsiveContainer width="100%" height={300}>
+                    <div className="h-[250px] sm:h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
                         {growthChartType === "area" ? (
                             <AreaChart data={combinedTimeData}>
                                 <CartesianGrid strokeDasharray="3 3" />
@@ -432,49 +432,47 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* User Role Distribution */}
-                <div className="p-4 sm:p-6 border rounded-lg bg-card shadow-sm overflow-x-hidden w-full max-w-full">
+                <div className="p-3 sm:p-6 border rounded-lg bg-card shadow-sm">
                     <h3 className="text-base sm:text-lg font-semibold mb-4">User Role Distribution</h3>
                     {roleData.length > 0 ? (
-                        <div className="w-full max-w-full overflow-hidden" style={{ width: '100%', maxWidth: '100%' }}>
-                            <div className="w-full" style={{ maxWidth: '100%', aspectRatio: '1' }}>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={roleData}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                            outerRadius={80}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                        >
-                                            {roleData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
+                        <div className="h-[250px] sm:h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={roleData}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {roleData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                        <div className="flex items-center justify-center h-[250px] sm:h-[300px] text-muted-foreground">
                             No data available
                         </div>
                     )}
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 w-full max-w-full">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 {/* Events Over Time */}
-                <div className="p-4 sm:p-6 border rounded-lg bg-card shadow-sm overflow-x-hidden w-full max-w-full">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                <div className="p-3 sm:p-6 border rounded-lg bg-card shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4">
                         <h3 className="text-base sm:text-lg font-semibold">Events Created Over Time</h3>
                         <select
                             value={eventsChartType}
                             onChange={(e) => setEventsChartType(e.target.value as ChartType)}
-                            className="h-8 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-full sm:w-auto min-w-[120px]"
+                            className="h-8 rounded-md border border-input bg-background px-2 sm:px-3 py-1 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                             <option value="line">Line Chart</option>
                             <option value="area">Area Chart</option>
@@ -482,8 +480,8 @@ export default function AdminDashboardPage() {
                         </select>
                     </div>
                     {combinedTimeData.length > 0 ? (
-                        <div className="w-full max-w-full overflow-hidden" style={{ width: '100%', maxWidth: '100%' }}>
-                            <ResponsiveContainer width="100%" height={300}>
+                        <div className="h-[250px] sm:h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
                             {eventsChartType === "line" ? (
                                 <LineChart data={combinedTimeData}>
                                     <CartesianGrid strokeDasharray="3 3" />
@@ -524,44 +522,42 @@ export default function AdminDashboardPage() {
                                     <Bar dataKey="events" fill={COLORS.primary} name="Events" />
                                 </BarChart>
                             )}
-                            </ResponsiveContainer>
+                        </ResponsiveContainer>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                        <div className="flex items-center justify-center h-[250px] sm:h-[300px] text-muted-foreground">
                             No data available
                         </div>
                     )}
                 </div>
 
                 {/* Event Mode Distribution */}
-                <div className="p-4 sm:p-6 border rounded-lg bg-card shadow-sm overflow-x-hidden w-full max-w-full">
+                <div className="p-3 sm:p-6 border rounded-lg bg-card shadow-sm">
                     <h3 className="text-base sm:text-lg font-semibold mb-4">Event Mode Distribution</h3>
                     {modeData.length > 0 ? (
-                        <div className="w-full max-w-full overflow-hidden" style={{ width: '100%', maxWidth: '100%' }}>
-                            <div className="w-full" style={{ maxWidth: '100%', aspectRatio: '1' }}>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={modeData}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                            outerRadius={80}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                        >
-                                            {modeData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
+                        <div className="h-[250px] sm:h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={modeData}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {modeData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                        <div className="flex items-center justify-center h-[250px] sm:h-[300px] text-muted-foreground">
                             No data available
                         </div>
                     )}
@@ -569,7 +565,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 w-full max-w-full">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <DashboardCard
                     title="Users"
                     description="Manage platform users"
@@ -610,19 +606,19 @@ function StatCard({ title, value, icon, href, trend }: StatCardProps) {
     const isPositive = trendPercentage !== null && trendPercentage >= 0;
 
     const cardContent = (
-        <div className="p-4 sm:p-6 border rounded-lg bg-card hover:bg-accent transition-colors">
+        <div className="p-6 border rounded-lg bg-card hover:bg-accent transition-colors">
             <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">{title}</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
                 <div className="text-muted-foreground">{icon}</div>
             </div>
             <div className="flex items-baseline justify-between">
-                <p className="text-2xl sm:text-3xl font-bold">{value.toLocaleString()}</p>
+                <p className="text-3xl font-bold">{value.toLocaleString()}</p>
                 {trendPercentage !== null && (
-                    <div className="flex items-center gap-1 text-xs sm:text-sm">
+                    <div className="flex items-center gap-1 text-sm">
                         {isPositive ? (
-                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+                            <TrendingUp className="h-4 w-4 text-green-500" />
                         ) : (
-                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+                            <TrendingDown className="h-4 w-4 text-red-500" />
                         )}
                         <span className={isPositive ? "text-green-500" : "text-red-500"}>
                             {isPositive ? "+" : ""}
@@ -655,13 +651,13 @@ function DashboardCard({
     return (
         <Link
             href={href}
-            className="block p-4 sm:p-6 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+            className="block p-6 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
         >
             <div className="flex items-center gap-3 mb-2">
                 {icon}
-                <h3 className="text-lg sm:text-xl font-semibold">{title}</h3>
+                <h3 className="text-xl font-semibold">{title}</h3>
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
+            <p className="text-sm text-muted-foreground">{description}</p>
         </Link>
     );
 }
