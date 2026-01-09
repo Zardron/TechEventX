@@ -523,3 +523,28 @@
   height: 12px !important;
   flex-shrink: 0 !important;
 }
+
+/* React Hot Toast Styling */
+.react-hot-toast {
+  font-family: var(--font-schibsted-grotesk), sans-serif;
+}
+
+.react-hot-toast > div {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.react-hot-toast > div:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .react-hot-toast > div {
+  background: rgba(30, 30, 30, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .react-hot-toast > div:hover {
+  background: rgba(40, 40, 40, 0.95) !important;
+}

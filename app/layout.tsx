@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import ConditionalNavbar from "@/components/ConditionalNavbar";
 import RoleBasedLayout from "@/components/RoleBasedLayout";
 import ConditionalContainer from "@/components/ConditionalContainer";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "react-hot-toast";
 
 const schibstedGrotesk = Schibsted_Grotesk({
     variable: "--font-schibsted-grotesk",
@@ -70,7 +70,47 @@ export default function RootLayout({
                             </ConditionalContainer>
                         </RoleBasedLayout>
                         <ConditionalFooter />
-                        <Toaster />
+                        <Toaster 
+                            position="bottom-right"
+                            toastOptions={{
+                                duration: 4000,
+                                style: {
+                                    background: 'var(--background)',
+                                    color: 'var(--foreground)',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: '0.5rem',
+                                    padding: '1rem',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                },
+                                success: {
+                                    iconTheme: {
+                                        primary: '#10b981',
+                                        secondary: 'white',
+                                    },
+                                    style: {
+                                        borderLeft: '4px solid #10b981',
+                                    },
+                                },
+                                error: {
+                                    iconTheme: {
+                                        primary: '#ef4444',
+                                        secondary: 'white',
+                                    },
+                                    style: {
+                                        borderLeft: '4px solid #ef4444',
+                                    },
+                                },
+                                loading: {
+                                    iconTheme: {
+                                        primary: '#3b82f6',
+                                        secondary: 'white',
+                                    },
+                                    style: {
+                                        borderLeft: '4px solid #3b82f6',
+                                    },
+                                },
+                            }}
+                        />
                     </QueryProvider>
                 </ThemeProvider>
             </body>
