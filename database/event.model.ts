@@ -24,8 +24,10 @@ export interface IEvent extends Document {
     availableTickets?: number; // Calculated field
     waitlistEnabled: boolean;
     // Status
-    status: 'draft' | 'published' | 'cancelled' | 'postponed' | 'completed';
+    status: 'draft' | 'pending_approval' | 'published' | 'cancelled' | 'postponed' | 'completed';
     publishedAt?: Date;
+    approvedAt?: Date;
+    approvedBy?: Types.ObjectId; // Admin who approved
     // Metadata
     views: number;
     createdAt: Date;
@@ -229,12 +231,19 @@ const eventSchema = new Schema<IEvent>(
         // Status
         status: {
             type: String,
-            enum: ['draft', 'published', 'cancelled', 'postponed', 'completed'],
+            enum: ['draft', 'pending_approval', 'published', 'cancelled', 'postponed', 'completed'],
             default: 'draft',
             index: true,
         },
         publishedAt: {
             type: Date,
+        },
+        approvedAt: {
+            type: Date,
+        },
+        approvedBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
         },
         // Metadata
         views: {

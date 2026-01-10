@@ -3,7 +3,8 @@ import Event from './event.model';
 
 export interface IBooking extends Document {
     eventId: Types.ObjectId;
-    email: string;
+    userId: Types.ObjectId; // Reference to User
+    email: string; // Kept for backward compatibility and guest bookings
     createdAt: Date;
     updatedAt: Date;
 }
@@ -17,6 +18,12 @@ const bookingSchema = new Schema<IBooking>(
             type: Schema.Types.ObjectId,
             ref: 'Event',
             required: [true, 'Event ID is required'],
+            index: true,
+        },
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: [true, 'User ID is required'],
             index: true,
         },
         email: {
@@ -51,6 +58,8 @@ const bookingSchema = new Schema<IBooking>(
 });
 
 bookingSchema.index({ eventId: 1 });
+bookingSchema.index({ userId: 1 });
+bookingSchema.index({ eventId: 1, userId: 1 }); // Compound index for checking duplicate bookings
 
 export default mongoose.models.Booking || mongoose.model<IBooking>('Booking', bookingSchema) as Model<IBooking>;
 

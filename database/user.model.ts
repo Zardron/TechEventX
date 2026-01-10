@@ -5,11 +5,19 @@ export interface IUser extends Document {
     email: string;
     password: string;
     name: string;
+    avatar?: string; // User avatar URL
     role: 'admin' | 'user' | 'organizer';
     organizerId?: mongoose.Types.ObjectId; // Reference to Organizer if role is 'organizer'
     stripeCustomerId?: string; // Stripe customer ID for payment processing
     banned?: boolean;
     deleted?: boolean;
+    notificationPreferences?: {
+        emailBookingConfirmations: boolean;
+        emailEventReminders: boolean;
+        emailEventUpdates: boolean;
+        emailPromotions: boolean;
+        emailNewsletter: boolean;
+    };
     createdAt: Date;
     updatedAt: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
@@ -57,6 +65,10 @@ const userSchema = new Schema<IUser>(
                 message: 'Name must be between 1 and 100 characters',
             },
         },
+        avatar: {
+            type: String,
+            trim: true,
+        },
         role: {
             type: String,
             enum: ['admin', 'user', 'organizer'],
@@ -79,6 +91,28 @@ const userSchema = new Schema<IUser>(
         deleted: {
             type: Boolean,
             default: false,
+        },
+        notificationPreferences: {
+            emailBookingConfirmations: {
+                type: Boolean,
+                default: true,
+            },
+            emailEventReminders: {
+                type: Boolean,
+                default: true,
+            },
+            emailEventUpdates: {
+                type: Boolean,
+                default: true,
+            },
+            emailPromotions: {
+                type: Boolean,
+                default: true,
+            },
+            emailNewsletter: {
+                type: Boolean,
+                default: true,
+            },
         },
     },
     {
