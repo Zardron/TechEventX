@@ -3,7 +3,6 @@ import mongoose, { Mongoose } from 'mongoose';
 const getMongoURI = (): string => {
     if (process.env.MONGODB_URI) {
         const uri = process.env.MONGODB_URI.trim();
-        // Log connection string without password for debugging
         const maskedUri = uri.replace(/:([^:@]+)@/, ':****@');
         console.log('🔗 MongoDB: Using MONGODB_URI:', maskedUri);
         return uri;
@@ -14,66 +13,53 @@ const getMongoURI = (): string => {
         throw new Error('Missing MongoDB env vars: MONGODB_URI or MONGO_DB_*');
     }
 
-    // Construct MongoDB connection string: mongodb+srv://username:password@cluster.mongodb.net/database
-    // MONGO_DB_SRV should be like: cluster0.xxxxx.mongodb.net (without mongodb+srv:// prefix)
     let srv = MONGO_DB_SRV.trim();
     
-    // Remove mongodb+srv:// if present (we'll add it back)
     if (srv.startsWith('mongodb+srv://')) {
         srv = srv.replace('mongodb+srv://', '');
     }
     
-    // Remove trailing slash if present
     srv = srv.replace(/\/$/, '');
     
-    // Validate that it looks like a MongoDB cluster hostname
     if (!srv.includes('.mongodb.net')) {
         console.warn('⚠️  Warning: MONGO_DB_SRV does not contain ".mongodb.net" - this may cause connection issues');
         console.warn('   Expected format: cluster0.xxxxx.mongodb.net');
         console.warn('   Got:', srv);
     }
     
-    // Construct full URI: mongodb+srv://user:pass@host/database
     const uri = `mongodb+srv://${MONGO_DB_USER}:${encodeURIComponent(MONGO_DB_PASSWORD)}@${srv}/${MONGO_DB_NAME}`;
     
-    // Log connection string without password for debugging
     const maskedUri = uri.replace(/:([^:@]+)@/, ':****@');
     console.log('🔗 MongoDB: Constructed URI:', maskedUri);
     
     return uri;
 };
 
-// Cache the connection promise to prevent multiple simultaneous connections
 let connectionPromise: Promise<Mongoose> | null = null;
 
 async function connectDB(): Promise<Mongoose> {
     try {
-        // If already connected, return immediately
         if (mongoose.connection.readyState === 1) {
             return mongoose as Mongoose;
         }
 
-        // If connection is in progress, wait for the existing promise
         if (connectionPromise) {
             return connectionPromise;
         }
 
-        // Create new connection promise
         const mongoURI = getMongoURI();
         
-        // Extract hostname for validation
         try {
             const url = new URL(mongoURI.replace('mongodb+srv://', 'https://'));
             const hostname = url.hostname;
             console.log('🔍 MongoDB: Attempting to connect to hostname:', hostname);
         } catch (e) {
-            // Ignore URL parsing errors
         }
         
         connectionPromise = mongoose.connect(mongoURI, {
-            serverSelectionTimeoutMS: 15000, // 15 seconds timeout
-            socketTimeoutMS: 45000, // 45 seconds socket timeout
-            connectTimeoutMS: 15000, // 15 seconds connection timeout
+            serverSelectionTimeoutMS: 15000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 15000,
             retryWrites: true,
             retryReads: true,
         })
@@ -82,12 +68,11 @@ async function connectDB(): Promise<Mongoose> {
                 return conn;
             })
             .catch((error) => {
-                connectionPromise = null; // Reset on error so we can retry
+                connectionPromise = null;
                 console.error('❌ MongoDB: Connection failed');
                 console.error('   Error code:', error.code);
                 console.error('   Error message:', error.message);
                 
-                // Provide helpful error messages
                 if (error.code === 'ENOTFOUND' || error.message?.includes('ENOTFOUND')) {
                     console.error('   💡 This is a DNS resolution error. Possible causes:');
                     console.error('      - MongoDB cluster is still deploying (check Atlas dashboard)');
@@ -105,7 +90,7 @@ async function connectDB(): Promise<Mongoose> {
 
         return connectionPromise;
     } catch (error) {
-        connectionPromise = null; // Reset on error
+        connectionPromise = null;
         console.error('❌ MongoDB: Connection failed', error);
         throw error;
     }
