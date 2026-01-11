@@ -6,8 +6,11 @@ export interface ISubscription extends Document {
     userId: Types.ObjectId;
     planId: Types.ObjectId;
     status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete' | 'incomplete_expired';
-    stripeSubscriptionId?: string;
-    stripeCustomerId?: string;
+    stripeSubscriptionId?: string; // Deprecated, use paymongoSubscriptionId
+    stripeCustomerId?: string; // Deprecated, use paymongoCustomerId
+    paymongoSubscriptionId?: string;
+    paymongoCustomerId?: string;
+    paymongoPaymentIntentId?: string;
     currentPeriodStart: Date;
     currentPeriodEnd: Date;
     cancelAtPeriodEnd: boolean;
@@ -46,6 +49,21 @@ const subscriptionSchema = new Schema<ISubscription>(
             trim: true,
             index: true,
         },
+        paymongoSubscriptionId: {
+            type: String,
+            trim: true,
+            sparse: true,
+        },
+        paymongoCustomerId: {
+            type: String,
+            trim: true,
+            index: true,
+        },
+        paymongoPaymentIntentId: {
+            type: String,
+            trim: true,
+            index: true,
+        },
         currentPeriodStart: {
             type: Date,
             required: [true, 'Current period start is required'],
@@ -73,6 +91,7 @@ const subscriptionSchema = new Schema<ISubscription>(
 // Indexes
 subscriptionSchema.index({ userId: 1 });
 subscriptionSchema.index({ stripeSubscriptionId: 1 }, { unique: true, sparse: true });
+subscriptionSchema.index({ paymongoSubscriptionId: 1 }, { unique: true, sparse: true });
 subscriptionSchema.index({ status: 1 });
 subscriptionSchema.index({ currentPeriodEnd: 1 });
 
