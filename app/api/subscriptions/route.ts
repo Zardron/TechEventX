@@ -4,7 +4,7 @@ import { verifyToken } from "@/lib/auth";
 import User from "@/database/user.model";
 import Subscription from "@/database/subscription.model";
 import Plan from "@/database/plan.model";
-import { stripe, createStripeCustomer, createStripeSubscription } from "@/lib/stripe";
+import { createPayMongoCustomer, createPayMongoSubscription, createPaymentIntent, attachPaymentMethodToIntent } from "@/lib/paymongo";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 
 // GET - Get user's current subscription
@@ -110,58 +110,117 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const existingSubscription = await Subscription.findOne({
             userId: user._id,
             status: { $in: ['active', 'trialing'] }
-        });
+        }).populate('planId');
 
+        // If user has an existing subscription, handle upgrade/downgrade
         if (existingSubscription) {
-            return NextResponse.json(
-                { message: "User already has an active subscription" },
-                { status: 400 }
+            const currentPlanId = existingSubscription.planId?._id?.toString() || existingSubscription.planId?.toString();
+            const newPlanId = plan._id.toString();
+
+            // Check if trying to subscribe to the same plan
+            if (currentPlanId === newPlanId) {
+                return NextResponse.json(
+                    { message: "You are already subscribed to this plan" },
+                    { status: 400 }
+                );
+            }
+
+            // Create or retrieve PayMongo customer (optional - not required for payment intents)
+            let paymongoCustomerId = user.paymongoCustomerId || user.stripeCustomerId; // Support migration
+            if (!paymongoCustomerId) {
+                try {
+                    const customer = await createPayMongoCustomer(user.email, user.name, {
+                        userId: user._id.toString(),
+                    });
+                    paymongoCustomerId = customer.id;
+                    // Store paymongoCustomerId in user model
+                    user.paymongoCustomerId = paymongoCustomerId;
+                    await user.save();
+                } catch (error: any) {
+                    // If customer creation fails, we can still proceed with payment intent
+                    // PayMongo payment intents don't strictly require a customer
+                    console.warn('Failed to create PayMongo customer:', error.message);
+                    // Continue without customer ID - payment intent can still be created
+                }
+            }
+
+            // Create payment intent for the new plan
+            const paymentIntent = await createPaymentIntent(
+                plan.price, // Amount in centavos
+                plan.currency || 'php',
+                {
+                    userId: user._id.toString(),
+                    planId: plan._id.toString(),
+                    type: 'subscription_upgrade',
+                    previousPlanId: currentPlanId,
+                }
             );
+
+            // DON'T update planId yet - wait for payment success
+            // Only update payment intent ID and set status to incomplete
+            existingSubscription.paymongoPaymentIntentId = paymentIntent.id;
+            existingSubscription.status = 'incomplete'; // Reset to incomplete until payment succeeds
+            // Keep existing period dates for now, or recalculate if needed
+            // For upgrades, you might want to prorate or start new period immediately
+            await existingSubscription.save();
+
+            return handleSuccessResponse("Subscription plan updated successfully", {
+                subscription: {
+                    id: existingSubscription._id.toString(),
+                    status: existingSubscription.status,
+                    plan: plan,
+                    clientSecret: paymentIntent.attributes.client_key,
+                    paymentIntentId: paymentIntent.id,
+                }
+            }, 200);
         }
 
-        // Create or retrieve Stripe customer
-        let stripeCustomerId = user.stripeCustomerId;
-        if (!stripeCustomerId) {
-            const customer = await createStripeCustomer(user.email, user.name, {
-                userId: user._id.toString(),
-            });
-            stripeCustomerId = customer.id;
-            // Store stripeCustomerId in user model
-            user.stripeCustomerId = stripeCustomerId;
-            await user.save();
+        // Create or retrieve PayMongo customer (optional - not required for payment intents)
+        let paymongoCustomerId = user.paymongoCustomerId || user.stripeCustomerId; // Support migration
+        if (!paymongoCustomerId) {
+            try {
+                const customer = await createPayMongoCustomer(user.email, user.name, {
+                    userId: user._id.toString(),
+                });
+                paymongoCustomerId = customer.id;
+                // Store paymongoCustomerId in user model
+                user.paymongoCustomerId = paymongoCustomerId;
+                await user.save();
+            } catch (error: any) {
+                // If customer creation fails, we can still proceed with payment intent
+                // PayMongo payment intents don't strictly require a customer
+                console.warn('Failed to create PayMongo customer:', error.message);
+                // Continue without customer ID - payment intent can still be created
+            }
         }
 
-        // Create Stripe subscription
-        // Note: You'll need to create Stripe Price objects for each plan
-        // For now, we'll assume you have a priceId stored in the plan or metadata
-        const priceId = plan.metadata?.stripePriceId || process.env[`STRIPE_PRICE_${plan.name.toUpperCase()}`];
-        
-        if (!priceId) {
-            return NextResponse.json(
-                { message: "Stripe price ID not configured for this plan" },
-                { status: 500 }
-            );
-        }
-
-        const stripeSubscription = await createStripeSubscription(
-            stripeCustomerId,
-            priceId,
+        // For PayMongo, we create a payment intent for the first payment
+        // Recurring payments will need to be handled separately or through PayMongo's billing feature
+        const paymentIntent = await createPaymentIntent(
+            plan.price, // Amount in centavos
+            plan.currency || 'php',
             {
                 userId: user._id.toString(),
                 planId: plan._id.toString(),
+                type: 'subscription',
             }
         );
 
+        // Calculate period dates
+        const now = new Date();
+        const periodEnd = new Date(now);
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+
         // Create subscription in database
+        // Note: PayMongo doesn't have native subscriptions, so we'll manage this in our database
         const subscription = await Subscription.create({
             userId: user._id,
             planId: plan._id,
-            status: stripeSubscription.status === 'active' ? 'active' : 'trialing',
-            stripeSubscriptionId: stripeSubscription.id,
-            stripeCustomerId,
-            currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-            currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-            trialEnd: stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000) : undefined,
+            status: 'incomplete', // Will be set to 'active' after payment confirmation
+            paymongoCustomerId: paymongoCustomerId || undefined, // Optional - payment intents don't require customer
+            paymongoPaymentIntentId: paymentIntent.id,
+            currentPeriodStart: now,
+            currentPeriodEnd: periodEnd,
         });
 
         return handleSuccessResponse("Subscription created successfully", {
@@ -169,7 +228,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 id: subscription._id.toString(),
                 status: subscription.status,
                 plan: plan,
-                clientSecret: (stripeSubscription.latest_invoice as any)?.payment_intent?.client_secret,
+                clientSecret: paymentIntent.attributes.client_key,
+                paymentIntentId: paymentIntent.id,
             }
         }, 201);
     } catch (error) {

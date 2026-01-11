@@ -3,7 +3,7 @@ import connectDB from "@/lib/mongodb";
 import { verifyToken } from "@/lib/auth";
 import User from "@/database/user.model";
 import Event from "@/database/event.model";
-import { createPaymentIntent } from "@/lib/stripe";
+import { createPaymentIntent } from "@/lib/paymongo";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // Create payment intent
         const paymentIntent = await createPaymentIntent(
             amount,
-            event.currency || 'usd',
+            event.currency || 'php', // Default to PHP for PayMongo
             {
                 userId: user._id.toString(),
                 eventId: event._id.toString(),
@@ -117,10 +117,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         );
 
         return handleSuccessResponse("Payment intent created", {
-            clientSecret: paymentIntent.client_secret,
+            clientSecret: paymentIntent.attributes.client_key,
+            paymentIntentId: paymentIntent.id,
             amount,
             discountAmount,
-            currency: event.currency || 'usd',
+            currency: event.currency || 'php',
         });
     } catch (error) {
         return handleApiError(error);
