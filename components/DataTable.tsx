@@ -25,7 +25,7 @@ export interface DataTableProps<T> {
     columns: Column<T>[];
     searchable?: boolean;
     searchPlaceholder?: string;
-    searchKeys?: (keyof T)[];
+    searchKeys?: (keyof T | string)[];
     filters?: {
         key: keyof T | string;
         label: string;
@@ -57,7 +57,7 @@ export function DataTable<T extends Record<string, any>>({
         if (searchKeys) return searchKeys;
         return columns
             .map((col) => col.key)
-            .filter((key) => typeof key === "string") as (keyof T)[];
+            .filter((key) => typeof key === "string") as (keyof T | string)[];
     }, [columns, searchKeys]);
 
     // Filter data based on search term and active filters
@@ -70,6 +70,20 @@ export function DataTable<T extends Record<string, any>>({
             result = result.filter((row) => {
                 return defaultSearchKeys.some((key) => {
                     const value = row[key];
+                    if (!value) return false;
+                    
+                    // Handle date objects - format them for better searchability
+                    if (value instanceof Date || (typeof value === 'object' && value !== null && 'getTime' in value)) {
+                        const date = new Date(value);
+                        const dateStr = date.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                        }).toLowerCase();
+                        const isoStr = date.toISOString().toLowerCase();
+                        return dateStr.includes(searchLower) || isoStr.includes(searchLower);
+                    }
+                    
                     return value
                         ?.toString()
                         .toLowerCase()
@@ -83,6 +97,11 @@ export function DataTable<T extends Record<string, any>>({
             if (filterValue) {
                 result = result.filter((row) => {
                     const value = row[filterKey];
+                    // Handle null/undefined/empty values for organizerName filter
+                    if (filterKey === 'organizerName') {
+                        const rowValue = value?.toString() || '-';
+                        return rowValue === filterValue;
+                    }
                     return value?.toString() === filterValue;
                 });
             }
@@ -142,10 +161,10 @@ export function DataTable<T extends Record<string, any>>({
 
                     {/* Filter Dropdowns */}
                     {filters && filters.length > 0 && (
-                        <div className="flex flex-wrap gap-2 sm:gap-3">
+                        <div className="flex flex-wrap gap-3 sm:gap-4">
                             {filters.map((filter) => (
                                 <div key={filter.key as string} className="flex items-center gap-2">
-                                    <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
+                                    <label className="text-sm font-medium text-foreground whitespace-nowrap">
                                         {filter.label}:
                                     </label>
                                     <div className="relative">
@@ -154,11 +173,20 @@ export function DataTable<T extends Record<string, any>>({
                                             onChange={(e) =>
                                                 handleFilterChange(filter.key as string, e.target.value)
                                             }
-                                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 sm:px-3 py-1 text-xs sm:text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer pr-9 min-w-[100px] sm:min-w-[120px]"
+                                            className="flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer pr-9 min-w-[120px] sm:min-w-[140px]"
+                                            style={{
+                                                colorScheme: 'dark',
+                                            }}
                                         >
-                                            <option value="">All</option>
+                                            <option value="" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+                                                All
+                                            </option>
                                             {filter.options.map((option) => (
-                                                <option key={option.value} value={option.value}>
+                                                <option 
+                                                    key={option.value} 
+                                                    value={option.value}
+                                                    style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+                                                >
                                                     {option.label}
                                                 </option>
                                             ))}
@@ -183,8 +211,9 @@ export function DataTable<T extends Record<string, any>>({
                                     {activeFilters[filter.key as string] && (
                                         <button
                                             onClick={() => clearFilter(filter.key as string)}
-                                            className="text-muted-foreground hover:text-foreground"
+                                            className="text-muted-foreground hover:text-foreground transition-colors"
                                             type="button"
+                                            aria-label={`Clear ${filter.label} filter`}
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
