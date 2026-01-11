@@ -193,6 +193,77 @@ export async function getPaymentIntent(paymentIntentId: string) {
 }
 
 /**
+ * Get payments for a payment intent
+ */
+export async function getPaymentsForIntent(paymentIntentId: string) {
+    try {
+        const response = await paymongoRequest(`/payments?payment_intent_id=${paymentIntentId}`);
+        // PayMongo returns { data: [...] } structure
+        return response.data || response || [];
+    } catch (error: any) {
+        // If the endpoint doesn't exist or fails, return empty array
+        console.warn('Failed to fetch payments for intent:', error?.message || error);
+        return [];
+    }
+}
+
+/**
+ * Get payment by ID
+ */
+export async function getPayment(paymentId: string) {
+    const response = await paymongoRequest(`/payments/${paymentId}`);
+    return response.data;
+}
+
+/**
+ * Get checkout session by ID
+ */
+export async function getCheckoutSession(sessionId: string) {
+    const response = await paymongoRequest(`/checkout_sessions/${sessionId}`);
+    return response.data;
+}
+
+/**
+ * Get source by ID
+ */
+export async function getSource(sourceId: string) {
+    const response = await paymongoRequest(`/sources/${sourceId}`);
+    return response.data;
+}
+
+/**
+ * Get sources for a payment intent
+ */
+export async function getSourcesForIntent(paymentIntentId: string) {
+    try {
+        const response = await paymongoRequest(`/sources?payment_intent_id=${paymentIntentId}`);
+        return response.data || [];
+    } catch (error: any) {
+        console.warn('Failed to fetch sources for intent:', error?.message || error);
+        return [];
+    }
+}
+
+/**
+ * Get all payments (with optional filters)
+ */
+export async function getPayments(filters?: { payment_intent_id?: string; limit?: number }) {
+    let endpoint = '/payments';
+    const params = new URLSearchParams();
+    if (filters?.payment_intent_id) {
+        params.append('payment_intent_id', filters.payment_intent_id);
+    }
+    if (filters?.limit) {
+        params.append('limit', filters.limit.toString());
+    }
+    if (params.toString()) {
+        endpoint += `?${params.toString()}`;
+    }
+    const response = await paymongoRequest(endpoint);
+    return response;
+}
+
+/**
  * Create a checkout session for PayMongo
  */
 export async function createCheckoutSession(
