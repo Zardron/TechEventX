@@ -38,10 +38,32 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        const users = await User.find({ deleted: { $ne: true } }).select('-password');
+        const users = await User.find({ deleted: { $ne: true } }).select('-password').lean();
 
+        // Populate organizer names for users with organizerId
+        const usersWithOrganizerNames = await Promise.all(
+            users.map(async (user) => {
+                const userObj = user as any;
+                if (userObj.organizerId) {
+                    // Handle both ObjectId and string formats
+                    const organizerId = userObj.organizerId.toString ? userObj.organizerId.toString() : userObj.organizerId;
+                    const organizer = await Organizer.findOne({
+                        _id: new mongoose.Types.ObjectId(organizerId),
+                        deleted: { $ne: true }
+                    }).select('name').lean();
+                    return {
+                        ...userObj,
+                        organizerName: organizer?.name || null
+                    };
+                }
+                return {
+                    ...userObj,
+                    organizerName: null
+                };
+            })
+        );
 
-        return handleSuccessResponse("Users fetched successfully", users);
+        return handleSuccessResponse("Users fetched successfully", usersWithOrganizerNames);
     } catch (error) {
         return handleApiError(error);
     }
