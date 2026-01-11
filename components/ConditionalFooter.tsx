@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 
 export default function ConditionalFooter() {
     const pathname = usePathname();
-    const hideFooter = pathname === "/sign-up" || pathname === "/sign-in" || pathname === "/appeal-ban" || pathname.startsWith("/admin-dashboard");
+    const hideFooter = pathname === "/sign-up" || pathname === "/sign-in" || pathname === "/appeal-ban" || pathname.startsWith("/admin-dashboard") || pathname.startsWith("/organizer-dashboard");
 
     if (hideFooter) {
         return null;

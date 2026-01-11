@@ -31,7 +31,7 @@ const FormSelect = React.forwardRef<HTMLSelectElement, FormSelectProps>(
         },
         ref
     ) => {
-        const selectId = id || `select-${label.toLowerCase().replace(/\s+/g, "-")}`;
+        const selectId = id || `select-${label?.toLowerCase().replace(/\s+/g, "-") || "select"}`;
 
         return (
             <div className={cn("space-y-2", containerClassName)}>

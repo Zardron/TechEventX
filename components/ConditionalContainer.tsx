@@ -4,9 +4,9 @@ import { usePathname } from "next/navigation";
 
 export default function ConditionalContainer({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const isAdminDashboard = pathname.startsWith("/admin-dashboard");
+    const isNotUserDashboard = pathname.startsWith("/admin-dashboard") || pathname.startsWith("/organizer-dashboard");
 
-    if (isAdminDashboard) {
+    if (isNotUserDashboard) {
         return <>{children}</>;
     }
 
