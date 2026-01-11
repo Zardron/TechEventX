@@ -127,8 +127,8 @@ export default function ProfilePage() {
 
             if (response.ok) {
                 const data = await response.json();
-                if (data.data.user.notificationPreferences) {
-                    setNotificationPrefs(data.data.user.notificationPreferences);
+                if (data.user?.notificationPreferences) {
+                    setNotificationPrefs(data.user.notificationPreferences);
                 }
             }
         } catch (error) {
@@ -137,6 +137,7 @@ export default function ProfilePage() {
             setIsLoading(false);
         }
     };
+
 
     useEffect(() => {
         if (!isInitializing) {

@@ -3,6 +3,7 @@
 import { LogOut, PanelLeftOpen, PanelRightOpen, User, Clock } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/hooks/use-auth"
+import NotificationCenter from "@/components/NotificationCenter"
 
 const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: boolean, setSideBarCollapsed: (collapsed: boolean) => void }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -98,50 +99,53 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                     </div>
                 </div>
             </div>
-            <div className="relative ml-2 flex-shrink-0 min-w-0">
-                <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className={`
-                        flex items-center gap-1 sm:gap-2 lg:gap-3 px-1 sm:px-2 py-1 rounded-xl transition-all duration-300
-                    `}
-                    aria-label="User menu"
-                >
+            <div className="flex items-center gap-2 ml-2 flex-shrink-0 min-w-0">
+                <NotificationCenter />
+                <div className="relative">
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className={`
+                            flex items-center gap-1 sm:gap-2 lg:gap-3 px-1 sm:px-2 py-1 rounded-xl transition-all duration-300
+                        `}
+                        aria-label="User menu"
+                    >
                     <span className="hidden sm:inline text-sm lg:text-base xl:text-lg font-semibold text-foreground whitespace-nowrap">
                         Welcome, <span className="text-blue capitalize">{user?.name || 'User'}</span>
                     </span>
                     <span className="sm:hidden text-sm font-semibold text-foreground whitespace-nowrap">
                         <span className="text-blue capitalize">{user?.name?.split(' ')[0] || 'User'}</span>
                     </span>
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-primary/30 via-primary/20 to-blue/30 border-2 border-blue/40 flex items-center justify-center text-xs font-bold text-foreground shadow-[0_0_15px_rgba(148,234,255,0.2)] cursor-pointer shrink-0">
-                        {getUserInitials(user?.name) || <User className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    </div>
-                </button>
-
-                {/* Dropdown Menu */}
-                {isMenuOpen && (
-                    <div className="absolute right-0 mt-3 w-48 sm:w-56 bg-dark-200/95 backdrop-blur-xl rounded-xl border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
-                        {/* User Info Section */}
-                        <div className="px-4 py-3 border-b border-blue/10 bg-dark-100/50">
-                            <p className="text-sm font-semibold text-foreground truncate">
-                                {user?.name}
-                            </p>
-                            <p className="text-xs text-foreground/60 truncate">
-                                {user?.email}
-                            </p>
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-primary/30 via-primary/20 to-blue/30 border-2 border-blue/40 flex items-center justify-center text-xs font-bold text-foreground shadow-[0_0_15px_rgba(148,234,255,0.2)] cursor-pointer shrink-0">
+                            {getUserInitials(user?.name) || <User className="w-3 h-3 sm:w-4 sm:h-4" />}
                         </div>
+                    </button>
 
-                        <div>
-                            <div className="border-t border-blue/10 " />
-                            <button
-                                onClick={handleSignOut}
-                                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors duration-200 cursor-pointer"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Sign out
-                            </button>
+                    {/* Dropdown Menu */}
+                    {isMenuOpen && (
+                        <div className="absolute right-0 mt-3 w-48 sm:w-56 bg-dark-200/95 backdrop-blur-xl rounded-xl border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+                            {/* User Info Section */}
+                            <div className="px-4 py-3 border-b border-blue/10 bg-dark-100/50">
+                                <p className="text-sm font-semibold text-foreground truncate">
+                                    {user?.name}
+                                </p>
+                                <p className="text-xs text-foreground/60 truncate">
+                                    {user?.email}
+                                </p>
+                            </div>
+
+                            <div>
+                                <div className="border-t border-blue/10 " />
+                                <button
+                                    onClick={handleSignOut}
+                                    className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors duration-200 cursor-pointer"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Sign out
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     )
