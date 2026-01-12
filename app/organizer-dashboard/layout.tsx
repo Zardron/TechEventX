@@ -4,6 +4,7 @@ import SideBar from "@/components/organizer-dashboard/Sidebar";
 import Navbar from "@/components/organizer-dashboard/Navbar";
 import BreadCrumbs from "@/components/organizer-dashboard/BreadCrumbs";
 import Footer from "@/components/organizer-dashboard/Footer";
+import WelcomeGuide from "@/components/organizer-dashboard/WelcomeGuide";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -107,6 +108,7 @@ export default function OrganizerDashboardLayout({
                     <Footer />
                 </div>
             </div>
+            <WelcomeGuide />
         </div>
     );
 }
