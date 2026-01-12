@@ -5,6 +5,9 @@ export interface IBooking extends Document {
     eventId: Types.ObjectId;
     userId: Types.ObjectId; // Reference to User
     email: string; // Kept for backward compatibility and guest bookings
+    paymentStatus?: 'pending' | 'confirmed' | 'rejected'; // Payment status for paid events
+    receiptUrl?: string; // URL to uploaded receipt
+    paymentMethod?: string; // Selected payment method (e.g., 'gcash', 'bank_transfer', 'paymaya', 'grabpay')
     createdAt: Date;
     updatedAt: Date;
 }
@@ -38,6 +41,19 @@ const bookingSchema = new Schema<IBooking>(
                 },
                 message: 'Email must be a valid email address',
             },
+        },
+        paymentStatus: {
+            type: String,
+            enum: ['pending', 'confirmed', 'rejected'],
+            default: undefined, // Only set for paid events
+        },
+        receiptUrl: {
+            type: String,
+            trim: true,
+        },
+        paymentMethod: {
+            type: String,
+            trim: true,
         },
     },
     {

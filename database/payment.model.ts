@@ -3,13 +3,16 @@ import Subscription from './subscription.model';
 
 export interface IPayment extends Document {
     subscriptionId?: Types.ObjectId;
+    eventId?: Types.ObjectId; // For event payments
+    bookingId?: Types.ObjectId; // Reference to booking
     userId: Types.ObjectId;
     amount: number; // Amount in cents
     currency: string;
     status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'canceled';
-    paymentMethod: 'card' | 'bank_transfer' | 'paypal' | 'other';
+    paymentMethod: 'card' | 'bank_transfer' | 'paypal' | 'gcash' | 'paymaya' | 'grabpay' | 'qr' | 'other';
     stripePaymentIntentId?: string;
     stripeChargeId?: string;
+    receiptUrl?: string; // For manual payment receipts
     description?: string;
     metadata?: Record<string, any>;
     paidAt?: Date;
@@ -23,6 +26,16 @@ const paymentSchema = new Schema<IPayment>(
         subscriptionId: {
             type: Schema.Types.ObjectId,
             ref: 'Subscription',
+            index: true,
+        },
+        eventId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Event',
+            index: true,
+        },
+        bookingId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Booking',
             index: true,
         },
         userId: {
@@ -50,7 +63,7 @@ const paymentSchema = new Schema<IPayment>(
         },
         paymentMethod: {
             type: String,
-            enum: ['card', 'bank_transfer', 'paypal', 'other'],
+            enum: ['card', 'bank_transfer', 'paypal', 'gcash', 'paymaya', 'grabpay', 'qr', 'other'],
             required: [true, 'Payment method is required'],
         },
         stripePaymentIntentId: {
@@ -59,6 +72,10 @@ const paymentSchema = new Schema<IPayment>(
             sparse: true,
         },
         stripeChargeId: {
+            type: String,
+            trim: true,
+        },
+        receiptUrl: {
             type: String,
             trim: true,
         },
@@ -86,7 +103,10 @@ const paymentSchema = new Schema<IPayment>(
 // Indexes
 paymentSchema.index({ userId: 1, createdAt: -1 });
 paymentSchema.index({ subscriptionId: 1 });
+paymentSchema.index({ eventId: 1 });
+paymentSchema.index({ bookingId: 1 });
 paymentSchema.index({ status: 1 });
+paymentSchema.index({ userId: 1, eventId: 1 });
 paymentSchema.index({ stripePaymentIntentId: 1 }, { unique: true, sparse: true });
 
 const Payment = mongoose.models.Payment || mongoose.model<IPayment>('Payment', paymentSchema);

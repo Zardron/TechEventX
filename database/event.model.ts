@@ -13,7 +13,6 @@ export interface IEvent extends Document {
     mode: string;
     audience: string;
     agenda: string[];
-    organizer: string; // Organizer name (kept for backward compatibility)
     organizerId?: Types.ObjectId; // Reference to User with organizer role
     tags: string[];
     // Pricing & Capacity
@@ -23,6 +22,30 @@ export interface IEvent extends Document {
     capacity?: number; // Maximum attendees (null = unlimited)
     availableTickets?: number; // Calculated field
     waitlistEnabled: boolean;
+    // Payment Methods
+    paymentMethods?: string[]; // Array of enabled payment methods (e.g., ['card', 'gcash', 'bank_transfer', 'qr'])
+    paymentDetails?: {
+        bank?: {
+            bankName: string;
+            accountName: string;
+            accountNumber: string;
+        };
+        gcash?: {
+            name: string;
+            number: string;
+        };
+        grabpay?: {
+            name: string;
+            number: string;
+        };
+        paymaya?: {
+            name: string;
+            number: string;
+        };
+        qr?: {
+            qrCodeUrl: string;
+        };
+    };
     // Status
     status: 'draft' | 'pending_approval' | 'published' | 'cancelled' | 'postponed' | 'completed';
     publishedAt?: Date;
@@ -228,6 +251,15 @@ const eventSchema = new Schema<IEvent>(
             type: Boolean,
             default: false,
         },
+        // Payment Methods
+        paymentMethods: {
+            type: [String],
+            default: [],
+        },
+        paymentDetails: {
+            type: Schema.Types.Mixed,
+            default: {},
+        },
         // Status
         status: {
             type: String,
@@ -289,11 +321,19 @@ eventSchema.index({ createdAt: -1 });
 // Calculate available tickets before save
 (eventSchema as any).pre('save', async function (this: IEvent) {
     if (this.capacity && this.isModified('capacity')) {
-        // Calculate available tickets (will be updated when bookings are made)
+        // Calculate available tickets based on confirmed bookings only
         const Booking = mongoose.models.Booking;
         if (Booking) {
-            const bookingCount = await Booking.countDocuments({ eventId: this._id });
-            this.availableTickets = Math.max(0, (this.capacity || 0) - bookingCount);
+            // Only count confirmed bookings (or bookings without paymentStatus for free events)
+            const confirmedBookingCount = await Booking.countDocuments({ 
+                eventId: this._id,
+                $or: [
+                    { paymentStatus: 'confirmed' },
+                    { paymentStatus: { $exists: false } }, // Free events don't have paymentStatus
+                    { paymentStatus: null } // Handle null values
+                ]
+            });
+            this.availableTickets = Math.max(0, (this.capacity || 0) - confirmedBookingCount);
         } else {
             this.availableTickets = this.capacity;
         }

@@ -3,7 +3,7 @@ import User from './user.model';
 
 export interface INotification extends Document {
     userId: Types.ObjectId;
-    type: 'booking_confirmation' | 'event_reminder' | 'event_update' | 'event_cancelled' | 'payment_received' | 'subscription_expiring' | 'organizer_application_submitted' | 'organizer_application_approved' | 'organizer_application_rejected' | 'system' | 'other';
+    type: 'user_booking_confirmation' | 'user_book_pending' | 'organizer_booking_pending' | 'event_reminder' | 'event_update' | 'event_cancelled' | 'payment_received' | 'subscription_expiring' | 'organizer_application_submitted' | 'organizer_application_approved' | 'organizer_application_rejected' | 'system' | 'other';
     title: string;
     message: string;
     link?: string;
@@ -24,7 +24,7 @@ const notificationSchema = new Schema<INotification>(
         },
         type: {
             type: String,
-            enum: ['booking_confirmation', 'event_reminder', 'event_update', 'event_cancelled', 'payment_received', 'subscription_expiring', 'organizer_application_submitted', 'organizer_application_approved', 'organizer_application_rejected', 'system', 'other'],
+            enum: ['user_booking_confirmation', 'user_book_pending', 'organizer_booking_pending', 'event_reminder', 'event_update', 'event_cancelled', 'payment_received', 'subscription_expiring', 'organizer_application_submitted', 'organizer_application_approved', 'organizer_application_rejected', 'system', 'other'],
             required: [true, 'Notification type is required'],
             index: true,
         },
