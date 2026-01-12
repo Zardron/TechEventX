@@ -108,7 +108,7 @@ export default function NotificationCenter() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative"
+                className="relative cursor-pointer"
             >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
