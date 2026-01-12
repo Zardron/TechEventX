@@ -18,9 +18,22 @@ export interface OrganizerStats {
 }
 
 export interface OrganizerStatsResponse {
-    success: boolean;
     message: string;
-    data: OrganizerStats;
+    // handleSuccessResponse spreads the data object, so stats are at root level
+    totalEvents: number;
+    upcomingEvents: number;
+    totalBookings: number;
+    totalRevenue: number;
+    monthlyRevenue: number;
+    recentEvents: Array<{
+        id: string;
+        title: string;
+        date: string;
+        bookings: number;
+        status: string;
+    }>;
+    // Also support nested structure for backward compatibility
+    data?: OrganizerStats;
 }
 
 export interface OrganizerEvent {
@@ -36,16 +49,41 @@ export interface OrganizerEvent {
     status: string;
     capacity?: number;
     availableTickets?: number;
+    confirmedBookings?: number;
     isFree: boolean;
     price?: number;
+    paymentMethods?: string[];
+    paymentDetails?: {
+        bank?: {
+            bankName: string;
+            accountName: string;
+            accountNumber: string;
+        };
+        gcash?: {
+            name: string;
+            number: string;
+        };
+        grabpay?: {
+            name: string;
+            number: string;
+        };
+        paymaya?: {
+            name: string;
+            number: string;
+        };
+        qr?: {
+            qrCodeUrl: string;
+        };
+    };
     createdAt: string;
     updatedAt: string;
 }
 
 export interface OrganizerEventsResponse {
-    success: boolean;
     message: string;
-    data: {
+    events: OrganizerEvent[];
+    // Also support nested structure for backward compatibility
+    data?: {
         events: OrganizerEvent[];
     };
 }
@@ -142,6 +180,9 @@ export interface Attendee {
     ticketNumber?: string;
     ticketStatus?: string;
     bookedAt: string;
+    paymentStatus?: 'pending' | 'confirmed' | 'rejected';
+    receiptUrl?: string;
+    paymentMethod?: string;
 }
 
 export interface OrganizerAttendeesResponse {
@@ -162,7 +203,7 @@ export const useOrganizerAttendees = (eventId?: string) => {
                 throw new Error("Not authenticated");
             }
 
-            const url = eventId
+            const url = eventId && eventId.trim() !== ''
                 ? `/api/organizer/attendees?eventId=${eventId}`
                 : "/api/organizer/attendees";
 
@@ -179,5 +220,55 @@ export const useOrganizerAttendees = (eventId?: string) => {
             return response.json();
         },
         enabled: !!token,
+    });
+};
+
+export interface Organizer {
+    id: string;
+    name: string;
+    description?: string;
+    logo?: string;
+    website?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface OrganizerResponse {
+    message: string;
+    organizer: Organizer;
+    // Also support nested structure for backward compatibility
+    data?: {
+        organizer: Organizer;
+    };
+}
+
+export const useOrganizer = (organizerId: string | undefined) => {
+    const { token } = useAuthStore();
+
+    return useQuery<OrganizerResponse>({
+        queryKey: ["organizer", organizerId],
+        queryFn: async () => {
+            if (!token) {
+                throw new Error("Not authenticated");
+            }
+
+            if (!organizerId) {
+                throw new Error("Organizer ID is required");
+            }
+
+            const response = await fetch(`/api/admin/organizers/${organizerId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Failed to fetch organizer");
+            }
+
+            return response.json();
+        },
+        enabled: !!token && !!organizerId,
     });
 };

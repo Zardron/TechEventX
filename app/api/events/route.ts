@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Event from "@/database/event.model";
+import User from "@/database/user.model";
+import Organizer from "@/database/organizer.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 import { handleImageUpload } from "@/lib/cloudinary";
+import mongoose from "mongoose";
 
 export async function POST(req: NextRequest) {
     try {
@@ -82,9 +85,69 @@ export async function GET() {
     try {
         await connectDB();
 
+        // Only fetch published events for public display
         const events = await Event.find().sort({ createdAt: -1 });
 
-        return handleSuccessResponse('Events Fetched Successfully', { events });
+        // Populate organizer names for all events
+        const eventsWithOrganizerNames = await Promise.all(
+            events.map(async (event) => {
+                const eventObj = event.toObject();
+
+                // Get organizerId from event (this references a User with role='organizer')
+                // Logic: Get User → Get User's organizerId → Find Organizer that matches
+                if (eventObj.organizerId) {
+                    try {
+                        // Convert organizerId to ObjectId for query
+                        const userId = eventObj.organizerId instanceof mongoose.Types.ObjectId
+                            ? eventObj.organizerId
+                            : new mongoose.Types.ObjectId(String(eventObj.organizerId));
+
+                        // Step 1: Get the logged user (organizer) from event.organizerId
+                        const user = await User.findOne({
+                            _id: userId,
+                            deleted: { $ne: true }
+                        });
+
+                        if (user && user.organizerId) {
+                            // Step 2: Get the organizerId from the user
+                            // Step 3: Check the organizer collection to find organizer that matches the organizerId of user
+                            const organizer = await Organizer.findOne({
+                                _id: user.organizerId,
+                                deleted: { $ne: true }
+                            });
+
+                            if (organizer) {
+                                // Use the Organizer's name
+                                eventObj.organizer = organizer.name;
+                            } else {
+                                // Fallback to user name if organizer not found
+                                eventObj.organizer = user.name;
+                            }
+                        } else if (user) {
+                            // Fallback to user name if user doesn't have organizerId
+                            eventObj.organizer = user.name;
+                        } else {
+                            // Backward compatibility: If user not found, try to find Organizer directly
+                            // (in case event.organizerId points directly to Organizer in old data)
+                            const organizer = await Organizer.findOne({
+                                _id: userId,
+                                deleted: { $ne: true }
+                            });
+
+                            if (organizer) {
+                                eventObj.organizer = organizer.name;
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Error fetching organizer for event:", eventObj._id, error);
+                    }
+                }
+
+                return eventObj;
+            })
+        );
+
+        return handleSuccessResponse('Events Fetched Successfully', { events: eventsWithOrganizerNames });
     } catch (error) {
         return handleApiError(error);
     }

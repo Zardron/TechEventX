@@ -3,6 +3,7 @@ import connectDB from "@/lib/mongodb";
 import { verifyToken } from "@/lib/auth";
 import User from "@/database/user.model";
 import Event from "@/database/event.model";
+import Organizer from "@/database/organizer.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 
 // POST - Duplicate an event
@@ -61,10 +62,23 @@ export async function POST(
             );
         }
 
+        // Get organizer name from Organizer model if user has organizerId, otherwise use existing organizer name
+        let organizerName = originalEvent.organizer;
+        if (user.organizerId) {
+            const organizer = await Organizer.findById(user.organizerId);
+            if (organizer) {
+                organizerName = organizer.name;
+            }
+        }
+
+        // Determine event status: publish free events immediately, keep paid events as draft
+        const eventStatus = originalEvent.isFree ? 'published' : 'draft';
+
         // Create duplicate event
         const duplicateData: any = {
             title: title || `${originalEvent.title} (Copy)`,
             description: originalEvent.description,
+            overview: originalEvent.overview,
             image: originalEvent.image,
             location: originalEvent.location,
             venue: originalEvent.venue,
@@ -74,15 +88,21 @@ export async function POST(
             audience: originalEvent.audience,
             agenda: originalEvent.agenda,
             organizerId: originalEvent.organizerId,
+            organizer: organizerName, // Use organizer name from Organizer model
             tags: originalEvent.tags,
-            pricing: originalEvent.pricing,
             price: originalEvent.price,
             isFree: originalEvent.isFree,
             capacity: originalEvent.capacity,
             availableTickets: originalEvent.capacity,
-            status: 'draft', // Always start as draft
-            approvalStatus: 'pending_approval',
+            status: eventStatus, // Only publish if free, keep paid events as draft
+            waitlistEnabled: originalEvent.waitlistEnabled,
+            currency: originalEvent.currency || 'php',
         };
+
+        // Only set publishedAt if event is being published
+        if (eventStatus === 'published') {
+            duplicateData.publishedAt = new Date();
+        }
 
         // Generate new slug
         const baseSlug = duplicateData.title.toLowerCase()

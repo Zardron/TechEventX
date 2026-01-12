@@ -6,6 +6,7 @@ import Event from "@/database/event.model";
 import Booking from "@/database/booking.model";
 import Ticket from "@/database/ticket.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
@@ -41,8 +42,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         const { searchParams } = new URL(req.url);
         const eventId = searchParams.get('eventId');
 
+        console.log(`🔍 Attendees API - Request received, eventId: ${eventId || 'none (all events)'}, user: ${user._id}, organizerId: ${user.organizerId || 'none'}`);
+
         let events;
-        if (eventId) {
+        if (eventId && eventId.trim() !== '') {
             const event = await Event.findById(eventId);
             if (!event) {
                 return NextResponse.json(
@@ -50,23 +53,89 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                     { status: 404 }
                 );
             }
-            if (user.role === 'organizer' && event.organizerId?.toString() !== user._id.toString()) {
-                return NextResponse.json(
-                    { message: "Forbidden - You don't own this event" },
-                    { status: 403 }
+            
+            // Check if user owns this event (handle both User and Organizer references)
+            if (user.role === 'organizer') {
+                const userId = user._id instanceof mongoose.Types.ObjectId 
+                    ? user._id 
+                    : new mongoose.Types.ObjectId(user._id.toString());
+                const userOrganizerId = user.organizerId ? (user.organizerId instanceof mongoose.Types.ObjectId 
+                    ? user.organizerId 
+                    : new mongoose.Types.ObjectId(user.organizerId.toString())) : null;
+                
+                const eventOrganizerId = event.organizerId ? (event.organizerId instanceof mongoose.Types.ObjectId 
+                    ? event.organizerId 
+                    : new mongoose.Types.ObjectId(event.organizerId.toString())) : null;
+                
+                // Check if event belongs to user (either directly or through organizerId)
+                const ownsEvent = eventOrganizerId && (
+                    eventOrganizerId.toString() === userId.toString() || 
+                    (userOrganizerId && eventOrganizerId.toString() === userOrganizerId.toString())
                 );
+                
+                if (!ownsEvent) {
+                    return NextResponse.json(
+                        { message: "Forbidden - You don't own this event" },
+                        { status: 403 }
+                    );
+                }
             }
             events = [event];
         } else {
-            events = await Event.find({ organizerId: user._id });
+            // Build query to find events owned by this organizer (handle both User and Organizer references)
+            const queryConditions: any[] = [];
+            
+            // If user has organizerId, find events where organizerId matches the Organizer
+            if (user.organizerId) {
+                const organizerId = user.organizerId instanceof mongoose.Types.ObjectId
+                    ? user.organizerId
+                    : new mongoose.Types.ObjectId(user.organizerId.toString());
+                queryConditions.push({ organizerId: organizerId });
+            }
+            
+            // Also check for events where organizerId points directly to the User (backward compatibility)
+            const userId = user._id instanceof mongoose.Types.ObjectId 
+                ? user._id 
+                : new mongoose.Types.ObjectId(user._id.toString());
+            queryConditions.push({ organizerId: userId });
+            
+            events = await Event.find({
+                $or: queryConditions
+            });
         }
 
-        const eventIds = events.map(e => e._id);
+        // Handle empty events array
+        if (events.length === 0) {
+            console.log(`🔍 Attendees API - No events found for organizer`);
+            return handleSuccessResponse("Attendees retrieved successfully", { attendees: [] });
+        }
 
-        // Get all bookings for these events
+        const eventIds = events.map(e => {
+            const id = e._id instanceof mongoose.Types.ObjectId 
+                ? e._id 
+                : new mongoose.Types.ObjectId(e._id.toString());
+            return id;
+        });
+
+        console.log(`🔍 Attendees API - Found ${events.length} events, looking for bookings with eventIds:`, eventIds.map(id => id.toString()));
+
+        // Get all bookings for these events, populate user info
         const bookings = await Booking.find({
             eventId: { $in: eventIds }
-        }).sort({ createdAt: -1 });
+        })
+        .populate('userId', 'name email')
+        .sort({ createdAt: -1 });
+
+        console.log(`🔍 Attendees API - Found ${bookings.length} bookings for ${eventIds.length} events`);
+        
+        // Debug: Log first few bookings to see their eventIds
+        if (bookings.length > 0) {
+            console.log(`🔍 Sample booking eventIds:`, bookings.slice(0, 3).map(b => ({
+                bookingId: b._id.toString(),
+                eventId: b.eventId.toString(),
+                email: b.email
+            })));
+        }
 
         // Get tickets for these bookings
         const bookingIds = bookings.map(b => b._id);
@@ -83,12 +152,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         // Format attendees
         const attendees = bookings.map(booking => {
             const ticket = ticketMap.get(booking._id.toString());
+            const bookingUser = booking.userId as any;
             return {
                 id: booking._id.toString(),
+                bookingId: booking._id.toString(),
+                name: bookingUser?.name || booking.email?.split('@')[0] || 'N/A',
                 email: booking.email,
                 ticketNumber: ticket?.ticketNumber,
                 ticketStatus: ticket?.status || 'active',
                 bookedAt: booking.createdAt,
+                paymentStatus: booking.paymentStatus,
+                receiptUrl: booking.receiptUrl,
+                paymentMethod: booking.paymentMethod,
             };
         });
 

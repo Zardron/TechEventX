@@ -43,7 +43,10 @@ export const useEventBySlug = (slug: string) => {
                 throw new Error('Failed to fetch event');
             }
 
-            return response.json();
+            const data = await response.json();
+            console.log("🟢 CLIENT: API Response:", data);
+            console.log("🟢 CLIENT: Organizer name:", data?.data?.event?.organizer);
+            return data;
         },
         enabled: !!slug,
     });

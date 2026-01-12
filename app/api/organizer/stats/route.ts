@@ -6,6 +6,7 @@ import Event from "@/database/event.model";
 import Booking from "@/database/booking.model";
 import Transaction from "@/database/transaction.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
@@ -39,9 +40,30 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
+        // Logic: Get user's organizerId, then find events where event.organizerId matches
+        // Handle both cases:
+        // 1. Events where organizerId = user.organizerId (events pointing to Organizer - current data structure)
+        // 2. Events where organizerId = user._id (events pointing to User - backward compatibility)
+        
+        const queryConditions: any[] = [];
+        
+        // If user has organizerId, find events where organizerId matches the Organizer
+        if (user.organizerId) {
+            const organizerId = user.organizerId instanceof mongoose.Types.ObjectId
+                ? user.organizerId
+                : new mongoose.Types.ObjectId(user.organizerId.toString());
+            queryConditions.push({ organizerId: organizerId });
+        }
+        
+        // Also check for events where organizerId points directly to the User (backward compatibility)
+        const userId = user._id instanceof mongoose.Types.ObjectId 
+            ? user._id 
+            : new mongoose.Types.ObjectId(user._id.toString());
+        queryConditions.push({ organizerId: userId });
+        
         // Get organizer's events
         const events = await Event.find({
-            organizerId: user._id,
+            $or: queryConditions
         });
 
         const eventIds = events.map(e => e._id);

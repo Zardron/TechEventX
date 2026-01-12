@@ -46,11 +46,21 @@ export async function GET(
         }
 
         // Verify organizer owns the event
-        if (user.role === 'organizer' && event.organizerId?.toString() !== user._id.toString()) {
-            return NextResponse.json(
-                { message: "Forbidden - You don't own this event" },
-                { status: 403 }
-            );
+        // Handle both cases: event.organizerId can point to user._id OR user.organizerId
+        if (user.role === 'organizer') {
+            const eventOrganizerId = event.organizerId?.toString();
+            const userId = user._id.toString();
+            const userOrganizerId = user.organizerId?.toString();
+            
+            // Check if event belongs to user (either via user._id or user.organizerId)
+            const ownsEvent = eventOrganizerId === userId || (userOrganizerId && eventOrganizerId === userOrganizerId);
+            
+            if (!ownsEvent) {
+                return NextResponse.json(
+                    { message: "Forbidden - You don't own this event" },
+                    { status: 403 }
+                );
+            }
         }
 
         return handleSuccessResponse("Event retrieved successfully", {
@@ -123,11 +133,21 @@ export async function PATCH(
         }
 
         // Verify organizer owns the event
-        if (user.role === 'organizer' && event.organizerId?.toString() !== user._id.toString()) {
-            return NextResponse.json(
-                { message: "Forbidden - You don't own this event" },
-                { status: 403 }
-            );
+        // Handle both cases: event.organizerId can point to user._id OR user.organizerId
+        if (user.role === 'organizer') {
+            const eventOrganizerId = event.organizerId?.toString();
+            const userId = user._id.toString();
+            const userOrganizerId = user.organizerId?.toString();
+            
+            // Check if event belongs to user (either via user._id or user.organizerId)
+            const ownsEvent = eventOrganizerId === userId || (userOrganizerId && eventOrganizerId === userOrganizerId);
+            
+            if (!ownsEvent) {
+                return NextResponse.json(
+                    { message: "Forbidden - You don't own this event" },
+                    { status: 403 }
+                );
+            }
         }
 
         const formData = await req.formData();
@@ -149,7 +169,26 @@ export async function PATCH(
         if (formData.get('isFree')) updateData.isFree = formData.get('isFree') === 'true';
         if (formData.get('price')) updateData.price = parseInt(formData.get('price') as string);
         if (formData.get('waitlistEnabled')) updateData.waitlistEnabled = formData.get('waitlistEnabled') === 'true';
-        if (formData.get('status')) updateData.status = formData.get('status');
+        if (formData.get('status')) {
+            updateData.status = formData.get('status');
+            if (formData.get('status') === 'published' && !event.publishedAt) {
+                updateData.publishedAt = new Date();
+            }
+        }
+        if (formData.get('paymentMethods')) {
+            try {
+                updateData.paymentMethods = JSON.parse(formData.get('paymentMethods') as string);
+            } catch {
+                // Invalid JSON, skip
+            }
+        }
+        if (formData.get('paymentDetails')) {
+            try {
+                updateData.paymentDetails = JSON.parse(formData.get('paymentDetails') as string);
+            } catch {
+                // Invalid JSON, skip
+            }
+        }
 
         // Handle image update
         const imageSource = formData.get('imageSource') as string;
@@ -225,11 +264,21 @@ export async function DELETE(
         }
 
         // Verify organizer owns the event
-        if (user.role === 'organizer' && event.organizerId?.toString() !== user._id.toString()) {
-            return NextResponse.json(
-                { message: "Forbidden - You don't own this event" },
-                { status: 403 }
-            );
+        // Handle both cases: event.organizerId can point to user._id OR user.organizerId
+        if (user.role === 'organizer') {
+            const eventOrganizerId = event.organizerId?.toString();
+            const userId = user._id.toString();
+            const userOrganizerId = user.organizerId?.toString();
+            
+            // Check if event belongs to user (either via user._id or user.organizerId)
+            const ownsEvent = eventOrganizerId === userId || (userOrganizerId && eventOrganizerId === userOrganizerId);
+            
+            if (!ownsEvent) {
+                return NextResponse.json(
+                    { message: "Forbidden - You don't own this event" },
+                    { status: 403 }
+                );
+            }
         }
 
         await Event.findByIdAndDelete(eventId);

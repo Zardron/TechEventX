@@ -3,8 +3,13 @@ import connectDB from "@/lib/mongodb";
 import { verifyToken } from "@/lib/auth";
 import User from "@/database/user.model";
 import Event from "@/database/event.model";
+import Booking from "@/database/booking.model";
+import Organizer from "@/database/organizer.model";
+import Subscription from "@/database/subscription.model";
+import Plan from "@/database/plan.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 import { handleImageUpload } from "@/lib/cloudinary";
+import mongoose from "mongoose";
 
 // GET - Get organizer's events
 export async function GET(req: NextRequest): Promise<NextResponse> {
@@ -38,28 +43,93 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
+        // Logic: Get user's organizerId, then find events where event.organizerId matches the Organizer
+        // The event.organizerId should match user.organizerId (which points to the Organizer document)
+        
+        // Build query to match events
+        // Handle both cases:
+        // 1. Events where organizerId = user.organizerId (events pointing to Organizer - current data structure)
+        // 2. Events where organizerId = user._id (events pointing to User - backward compatibility)
+        
+        const queryConditions: any[] = [];
+        
+        // If user has organizerId, find events where organizerId matches the Organizer
+        if (user.organizerId) {
+            const organizerId = user.organizerId instanceof mongoose.Types.ObjectId
+                ? user.organizerId
+                : new mongoose.Types.ObjectId(user.organizerId.toString());
+            queryConditions.push({ organizerId: organizerId });
+            console.log("🔵 Looking for events with organizerId (Organizer):", organizerId.toString());
+        }
+        
+        // Also check for events where organizerId points directly to the User (backward compatibility)
+        const userId = user._id instanceof mongoose.Types.ObjectId 
+            ? user._id 
+            : new mongoose.Types.ObjectId(user._id.toString());
+        queryConditions.push({ organizerId: userId });
+        console.log("🔵 Looking for events with organizerId (User):", userId.toString());
+        
         const events = await Event.find({
-            organizerId: user._id
+            $or: queryConditions
         }).sort({ createdAt: -1 });
+        
+        console.log("🔵 Found events count:", events.length);
 
-        const eventsData = events.map(event => ({
-            id: event._id.toString(),
-            title: event.title,
-            slug: event.slug,
-            description: event.description,
-            image: event.image,
-            date: event.date,
-            time: event.time,
-            location: event.location,
-            mode: event.mode,
-            status: event.status,
-            capacity: event.capacity,
-            availableTickets: event.availableTickets,
-            isFree: event.isFree,
-            price: event.price,
-            createdAt: event.createdAt,
-            updatedAt: event.updatedAt,
-        }));
+        // Get event IDs to query bookings
+        const eventIds = events.map(e => e._id);
+
+        // Count confirmed bookings for each event
+        // Confirmed bookings are those with paymentStatus='confirmed' or no paymentStatus (free events)
+        const confirmedBookingsCounts = await Booking.aggregate([
+            {
+                $match: {
+                    eventId: { $in: eventIds },
+                    $or: [
+                        { paymentStatus: 'confirmed' },
+                        { paymentStatus: { $exists: false } },
+                        { paymentStatus: null }
+                    ]
+                }
+            },
+            {
+                $group: {
+                    _id: '$eventId',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Create a map for quick lookup
+        const bookingsMap = new Map(
+            confirmedBookingsCounts.map(item => [item._id.toString(), item.count])
+        );
+
+        const eventsData = events.map(event => {
+            const eventIdStr = event._id.toString();
+            const confirmedBookings = bookingsMap.get(eventIdStr) || 0;
+            
+            return {
+                id: eventIdStr,
+                title: event.title,
+                slug: event.slug,
+                description: event.description,
+                image: event.image,
+                date: event.date,
+                time: event.time,
+                location: event.location,
+                mode: event.mode,
+                status: event.status,
+                capacity: event.capacity,
+                availableTickets: event.availableTickets,
+                confirmedBookings: confirmedBookings, // Add confirmed bookings count
+                isFree: event.isFree,
+                price: event.price,
+                paymentMethods: event.paymentMethods || [],
+                paymentDetails: event.paymentDetails || {},
+                createdAt: event.createdAt,
+                updatedAt: event.updatedAt,
+            };
+        });
 
         return handleSuccessResponse("Events retrieved successfully", { events: eventsData });
     } catch (error) {
@@ -144,20 +214,73 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const isFree = formData.get('isFree') === 'true';
         const price = formData.get('price') ? parseInt(formData.get('price') as string) : undefined;
 
-        const event = await Event.create({
+        // Check event limit based on organizer's plan (admins bypass this check)
+        if (user.role !== 'admin') {
+            const subscription = await Subscription.findOne({
+                userId: user._id,
+                status: { $in: ['active', 'trialing'] }
+            }).populate('planId');
+
+            let maxEvents: number | null = null;
+            if (subscription && subscription.planId) {
+                const plan = subscription.planId as any;
+                maxEvents = plan.features?.maxEvents ?? null;
+            } else {
+                // If no subscription, check for Free plan (default)
+                const freePlan = await Plan.findOne({ name: 'Free', isActive: true });
+                if (freePlan) {
+                    maxEvents = freePlan.features?.maxEvents ?? null;
+                }
+            }
+
+            // Count all events for this organizer (regardless of status)
+            const eventCount = await Event.countDocuments({
+                organizerId: user._id
+            });
+
+            // Check if organizer has reached their event limit
+            if (maxEvents !== null && eventCount >= maxEvents) {
+                return NextResponse.json(
+                    { 
+                        message: `You have reached your event limit of ${maxEvents} events. Please upgrade your plan to create more events.` 
+                    },
+                    { status: 403 }
+                );
+            }
+        }
+
+        // Get organizer name from Organizer model if user has organizerId, otherwise use user name
+        let organizerName = user.name;
+        if (user.organizerId) {
+            const organizer = await Organizer.findById(user.organizerId);
+            if (organizer) {
+                organizerName = organizer.name;
+            }
+        }
+
+        // Determine event status: publish free events immediately, keep paid events as draft
+        const eventStatus = isFree ? 'published' : 'draft';
+        const eventDataToCreate: any = {
             ...eventData,
             image: imageUrl,
             tags,
             agenda,
             organizerId: user._id,
-            organizer: user.name, // Keep for backward compatibility
+            organizer: organizerName, // Use organizer name instead of full user name
             capacity,
             isFree,
             price: isFree ? undefined : price,
-            currency: 'usd',
-            status: 'draft', // Start as draft
+            currency: 'php',
+            status: eventStatus,
             waitlistEnabled: formData.get('waitlistEnabled') === 'true',
-        });
+        };
+
+        // Only set publishedAt if event is being published
+        if (eventStatus === 'published') {
+            eventDataToCreate.publishedAt = new Date();
+        }
+
+        const event = await Event.create(eventDataToCreate);
 
         return handleSuccessResponse('Event created successfully', { event }, 201);
     } catch (error) {
