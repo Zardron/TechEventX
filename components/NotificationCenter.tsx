@@ -129,7 +129,7 @@ export default function NotificationCenter() {
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute right-0 top-12 w-[420px] bg-card border border-border/50 rounded-xl shadow-2xl z-50 max-h-[600px] flex flex-col overflow-hidden backdrop-blur-sm">
+                    <div className="absolute right-0 top-12 w-[420px] bg-card border border-border/50 rounded-md shadow-2xl z-50 max-h-[600px] flex flex-col overflow-hidden backdrop-blur-sm">
                         {/* Header */}
                         <div className="p-4 border-b border-border/50 bg-muted/30 flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -210,7 +210,7 @@ export default function NotificationCenter() {
                                             </Button>
                                             <div className="flex items-start gap-3">
                                                 {/* Icon */}
-                                                <div className={`shrink-0 w-10 h-10 rounded-lg flex items-center justify-center border ${
+                                                <div className={`shrink-0 w-10 h-10 rounded-md flex items-center justify-center border ${
                                                     getNotificationColor(notification.type)
                                                 }`}>
                                                     {getNotificationIcon(notification.type)}

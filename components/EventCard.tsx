@@ -22,7 +22,7 @@ const EventCard = ({ slug, title, image, location, time, date, description, isFr
         <Link 
             href={`/events/${slug}`} 
             id="event-card" 
-            className="group relative flex flex-col h-full glass rounded-xl overflow-hidden border border-border-dark/50 hover:border-blue/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue/10"
+            className="group relative flex flex-col h-full glass rounded-md overflow-hidden border border-border-dark/50 hover:border-blue/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue/10"
         >
             {/* Image Container with Overlay */}
             <div className="relative overflow-hidden">
@@ -36,7 +36,7 @@ const EventCard = ({ slug, title, image, location, time, date, description, isFr
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 {/* Price Badge - Top Right Corner */}
-                <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-lg border backdrop-blur-sm font-bold text-xs ${
+                <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-md border backdrop-blur-sm font-bold text-xs ${
                     isFree 
                         ? "bg-green-500/20 border-green-500/40 text-green-400" 
                         : "bg-primary/20 border-primary/40 text-primary"

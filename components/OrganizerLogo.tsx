@@ -91,9 +91,9 @@ const OrganizerLogo = ({ organizer, logoUrl }: OrganizerLogoProps) => {
 
     return (
         <div className="flex flex-col items-center justify-center group py-4">
-            <div className="w-24 h-24 md:w-28 md:h-28 rounded-xl glass p-3 flex items-center justify-center hover:scale-110 transition-all duration-300 border border-blue/20 group-hover:border-blue/50 hover:shadow-[0_0_20px_rgba(148,234,255,0.2)] bg-background/10 backdrop-blur-sm">
+            <div className="w-24 h-24 md:w-28 md:h-28 rounded-md glass p-3 flex items-center justify-center hover:scale-110 transition-all duration-300 border border-blue/20 group-hover:border-blue/50 hover:shadow-[0_0_20px_rgba(148,234,255,0.2)] bg-background/10 backdrop-blur-sm">
                 {defaultLogoUrl && !imageError ? (
-                    <div className="w-full h-full flex items-center justify-center bg-background/10 rounded-lg p-2 transition-all duration-300">
+                    <div className="w-full h-full flex items-center justify-center bg-background/10 rounded-md p-2 transition-all duration-300">
                         <Image
                             src={defaultLogoUrl}
                             alt={organizer}
@@ -105,7 +105,7 @@ const OrganizerLogo = ({ organizer, logoUrl }: OrganizerLogoProps) => {
                         />
                     </div>
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-background/10 rounded-lg">
+                    <div className="w-full h-full flex items-center justify-center bg-background/10 rounded-md">
                         <div className="text-blue text-lg font-bold text-center px-2">
                             {getInitials()}
                         </div>

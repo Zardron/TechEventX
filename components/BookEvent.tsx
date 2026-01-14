@@ -401,7 +401,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                 ) : (
                     <div className="space-y-3">
                         {error && (
-                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                            <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30">
                                 <p className="text-red-400 text-sm">
                                     {error instanceof Error ? error.message : 'An error occurred while booking'}
                                 </p>
@@ -431,7 +431,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
             {/* Payment Method Modal for Paid Events */}
             {mounted && showPaymentModal && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="glass rounded-2xl p-6 md:p-8 border border-primary/30 max-w-2xl w-full card-shadow max-h-[90vh] overflow-y-auto" style={{ boxShadow: '0 0 20px rgba(89, 222, 202, 0.2), 0 0 40px rgba(89, 222, 202, 0.1)' }}>
+                    <div className="glass rounded-md p-6 md:p-8 border border-primary/30 max-w-2xl w-full card-shadow max-h-[90vh] overflow-y-auto" style={{ boxShadow: '0 0 20px rgba(89, 222, 202, 0.2), 0 0 40px rgba(89, 222, 202, 0.1)' }}>
                         <div className="space-y-6">
                             <div className="text-center">
                                 <h3 className="text-xl md:text-2xl font-bold text-light-100 mb-2">Payment Information</h3>
@@ -440,7 +440,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
 
                             {/* Event Price */}
                             {event && (
-                                <div className="p-4 rounded-xl bg-primary/10 border border-primary/30">
+                                <div className="p-4 rounded-md bg-primary/10 border border-primary/30">
                                     <div className="flex justify-between items-center">
                                         <span className="text-light-200">Event Price:</span>
                                         <span className="text-primary font-bold text-lg">₱{((event.price || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
@@ -508,7 +508,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                         <button
                                                             key={method}
                                                             onClick={() => setSelectedPaymentMethod(method)}
-                                                            className={`p-4 rounded-xl border transition-all duration-200 text-left ${
+                                                            className={`p-4 rounded-md border transition-all duration-200 text-left ${
                                                                 selectedPaymentMethod === method
                                                                     ? 'bg-primary/20 border-primary text-primary'
                                                                     : 'bg-dark-200/30 border-border-dark/50 text-light-100 hover:border-primary/30'
@@ -519,7 +519,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div className="p-4 rounded-xl bg-dark-200/20 border border-border-dark/30 text-center">
+                                                <div className="p-4 rounded-md bg-dark-200/20 border border-border-dark/30 text-center">
                                                     <p className="text-sm text-light-200">Not available</p>
                                                 </div>
                                             )}
@@ -534,7 +534,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                         <button
                                                             key={method}
                                                             onClick={() => setSelectedPaymentMethod(method)}
-                                                            className={`p-4 rounded-xl border transition-all duration-200 ${
+                                                            className={`p-4 rounded-md border transition-all duration-200 ${
                                                                 selectedPaymentMethod === method
                                                                     ? 'bg-primary/20 border-primary text-primary'
                                                                     : 'bg-dark-200/30 border-border-dark/50 text-light-100 hover:border-primary/30'
@@ -545,7 +545,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div className="p-4 rounded-xl bg-dark-200/20 border border-border-dark/30 text-center">
+                                                <div className="p-4 rounded-md bg-dark-200/20 border border-border-dark/30 text-center">
                                                     <p className="text-sm text-light-200">Not available</p>
                                                 </div>
                                             )}
@@ -560,7 +560,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                         <button
                                                             key={method}
                                                             onClick={() => setSelectedPaymentMethod(method)}
-                                                            className={`p-4 rounded-xl border transition-all duration-200 ${
+                                                            className={`p-4 rounded-md border transition-all duration-200 ${
                                                                 selectedPaymentMethod === method
                                                                     ? 'bg-primary/20 border-primary text-primary'
                                                                     : 'bg-dark-200/30 border-border-dark/50 text-light-100 hover:border-primary/30'
@@ -571,7 +571,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div className="p-4 rounded-xl bg-dark-200/20 border border-border-dark/30 text-center">
+                                                <div className="p-4 rounded-md bg-dark-200/20 border border-border-dark/30 text-center">
                                                     <p className="text-sm text-light-200">Not available</p>
                                                 </div>
                                             )}
@@ -582,7 +582,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
 
                             {/* Payment Details */}
                             {selectedPaymentMethod && event?.paymentDetails && (
-                                <div className="p-4 rounded-xl bg-dark-200/30 border border-border-dark/50 space-y-2">
+                                <div className="p-4 rounded-md bg-dark-200/30 border border-border-dark/50 space-y-2">
                                     <h4 className="text-sm font-semibold text-light-100 mb-3">Payment Details:</h4>
                                     {selectedPaymentMethod === 'gcash' && event.paymentDetails.gcash && (
                                         <div className="space-y-1 text-sm text-light-200">
@@ -617,7 +617,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                 alt="QR Code" 
                                                 width={200} 
                                                 height={200} 
-                                                className="mx-auto rounded-lg"
+                                                className="mx-auto rounded-md"
                                             />
                                         </div>
                                     )}
@@ -638,7 +638,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                     />
                                     <label
                                         htmlFor="receipt-upload"
-                                        className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-border-dark/50 rounded-xl cursor-pointer hover:border-primary/50 transition-colors duration-200 bg-dark-200/20"
+                                        className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-border-dark/50 rounded-md cursor-pointer hover:border-primary/50 transition-colors duration-200 bg-dark-200/20"
                                     >
                                         {receiptPreview ? (
                                             <div className="relative w-full max-w-xs">
@@ -647,7 +647,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                                     alt="Receipt preview"
                                                     width={400}
                                                     height={300}
-                                                    className="w-full h-auto rounded-lg object-contain"
+                                                    className="w-full h-auto rounded-md object-contain"
                                                 />
                                                 <button
                                                     onClick={(e) => {
@@ -678,7 +678,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                         )}
                                     </label>
                                     {isUploadingReceipt && (
-                                        <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
+                                        <div className="p-3 rounded-md bg-primary/10 border border-primary/30">
                                             <p className="text-sm text-primary flex items-center gap-2">
                                                 <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -689,7 +689,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                         </div>
                                     )}
                                     {receiptUrl && !isUploadingReceipt && (
-                                        <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                                        <div className="p-3 rounded-md bg-green-500/10 border border-green-500/30">
                                             <p className="text-sm text-green-400 flex items-center gap-2">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -700,7 +700,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                     )}
                                     {receiptFile && !receiptUrl && !isUploadingReceipt && (
                                         <div className="space-y-2">
-                                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                                            <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30">
                                                 <p className="text-sm text-red-400 flex items-center gap-2 mb-2">
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -711,7 +711,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                             <button
                                                 onClick={handleUploadReceipt}
                                                 disabled={isUploadingReceipt || !receiptFile || !token}
-                                                className="w-full px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 Retry Upload
                                             </button>
@@ -721,7 +721,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                             </div>
 
                             {/* 24-hour notice */}
-                            <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                            <div className="p-4 rounded-md bg-yellow-500/10 border border-yellow-500/30">
                                 <p className="text-sm text-yellow-400 flex items-start gap-2">
                                     <svg className="w-5 h-5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -734,13 +734,13 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     onClick={handleClosePaymentModal}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-dark-200/50 border border-border-dark/50 text-light-100 font-medium hover:bg-dark-200/70 transition-colors duration-200"
+                                    className="flex-1 px-4 py-2.5 rounded-md bg-dark-200/50 border border-border-dark/50 text-light-100 font-medium hover:bg-dark-200/70 transition-colors duration-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleProceedToConfirmation}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={!event?.paymentMethods || event.paymentMethods.length === 0 || !selectedPaymentMethod || !receiptUrl}
                                 >
                                     Proceed
@@ -755,7 +755,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
             {/* Confirmation Modal */}
             {mounted && showConfirmation && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="glass rounded-2xl p-6 md:p-8 border border-primary/30 max-w-md w-full card-shadow" style={{ boxShadow: '0 0 20px rgba(89, 222, 202, 0.2), 0 0 40px rgba(89, 222, 202, 0.1)' }}>
+                    <div className="glass rounded-md p-6 md:p-8 border border-primary/30 max-w-md w-full card-shadow" style={{ boxShadow: '0 0 20px rgba(89, 222, 202, 0.2), 0 0 40px rgba(89, 222, 202, 0.1)' }}>
                         <div className="flex flex-col items-center text-center space-y-4">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
                                 <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -769,7 +769,7 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                                     : "Are you sure you want to be part of this event?"}
                             </p>
                             {isPaidEvent && (
-                                <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 w-full">
+                                <div className="p-3 rounded-md bg-yellow-500/10 border border-yellow-500/30 w-full">
                                     <p className="text-sm text-yellow-400 flex items-center gap-2">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -781,14 +781,14 @@ const BookEvent = ({ eventSlug }: BookEventProps) => {
                             <div className="flex gap-3 w-full mt-6">
                                 <button
                                     onClick={handleCancelBooking}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-dark-200/50 border border-border-dark/50 text-light-100 font-medium hover:bg-dark-200/70 transition-colors duration-200"
+                                    className="flex-1 px-4 py-2.5 rounded-md bg-dark-200/50 border border-border-dark/50 text-light-100 font-medium hover:bg-dark-200/70 transition-colors duration-200"
                                     disabled={isLoading}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleConfirmBooking}
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors duration-200"
+                                    className="flex-1 px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors duration-200"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (

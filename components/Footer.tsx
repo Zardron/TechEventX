@@ -74,7 +74,7 @@ const Footer = () => {
             {/* Newsletter Section */}
             {!isSignInPage && (
                 <AnimateOnScroll variant="glow">
-                    <div className="mb-16 glass p-8 md:p-12 rounded-2xl border border-blue/20 relative overflow-hidden">
+                    <div className="mb-16 glass p-8 md:p-12 rounded-md border border-blue/20 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-blue/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                         <div className="relative z-10 max-w-3xl mx-auto text-center">
                             <div className="flex items-center justify-center gap-3 mb-4">
@@ -220,11 +220,11 @@ const Footer = () => {
                                 Community
                             </h3>
                             <div className="space-y-4">
-                                <div className="glass p-4 rounded-lg border border-blue/10 hover:border-blue/30 transition-all duration-300 hover:scale-105">
+                                <div className="glass p-4 rounded-md border border-blue/10 hover:border-blue/30 transition-all duration-300 hover:scale-105">
                                     <p className="text-2xl font-bold text-blue mb-1">50K+</p>
                                     <p className="text-light-200 text-sm">Active Participants</p>
                                 </div>
-                                <div className="glass p-4 rounded-lg border border-blue/10 hover:border-blue/30 transition-all duration-300 hover:scale-105">
+                                <div className="glass p-4 rounded-md border border-blue/10 hover:border-blue/30 transition-all duration-300 hover:scale-105">
                                     <p className="text-2xl font-bold text-blue mb-1">{organizerCount}</p>
                                     <p className="text-light-200 text-sm">Event Organizers</p>
                                 </div>

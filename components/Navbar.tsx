@@ -85,7 +85,7 @@ const Navbar = () => {
                             href="/"
                             className="flex items-center gap-3 group relative z-10"
                         >
-                            <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-blue/10 border border-blue/20 flex items-center justify-center p-2.5 shadow-[0_0_20px_rgba(148,234,255,0.1)] group-hover:shadow-[0_0_25px_rgba(148,234,255,0.2)] group-hover:border-blue/40 transition-all duration-300">
+                            <div className="relative w-11 h-11 rounded-md bg-gradient-to-br from-primary/10 to-blue/10 border border-blue/20 flex items-center justify-center p-2.5 shadow-[0_0_20px_rgba(148,234,255,0.1)] group-hover:shadow-[0_0_25px_rgba(148,234,255,0.2)] group-hover:border-blue/40 transition-all duration-300">
                                 <Image
                                     src="/icons/logo.png"
                                     alt="TechEventX Logo"
@@ -106,7 +106,7 @@ const Navbar = () => {
                                         key={link.href}
                                         href={link.href}
                                         className={`
-                                        relative px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-300
+                                        relative px-6 py-2.5 rounded-md text-sm font-medium transition-all duration-300
                                         ${active
                                                 ? "bg-gradient-to-r from-blue/20 to-primary/20 text-blue border border-blue/30 shadow-[0_0_25px_rgba(148,234,255,0.25)]"
                                                 : "text-foreground/80 hover:text-foreground hover:bg-dark-200/50"
@@ -115,7 +115,7 @@ const Navbar = () => {
                                     >
                                         {link.label}
                                         {active && (
-                                            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue/10 to-primary/10 -z-10 blur-sm" />
+                                            <div className="absolute inset-0 rounded-md bg-gradient-to-r from-blue/10 to-primary/10 -z-10 blur-sm" />
                                         )}
                                     </Link>
                                 )
@@ -129,7 +129,7 @@ const Navbar = () => {
                                     <button
                                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                         className={`
-                                            flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300
+                                            flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-300
                                             ${isDropdownOpen
                                                 ? "bg-dark-200/80 border border-blue/30 shadow-[0_0_20px_rgba(148,234,255,0.15)]"
                                                 : "bg-dark-200/40 border border-blue/10 hover:bg-dark-200/60 hover:border-blue/20"
@@ -147,7 +147,7 @@ const Navbar = () => {
 
                                 {/* Dropdown Menu */}
                                 {isDropdownOpen && (
-                                    <div className="absolute right-0 mt-3 w-56 bg-dark-200/95 backdrop-blur-xl rounded-xl border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+                                    <div className="absolute right-0 mt-3 w-56 bg-dark-200/95 backdrop-blur-xl rounded-md border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
                                         {/* User Info Section */}
                                         <div className="px-4 py-3 border-b border-blue/10 bg-dark-100/50">
                                             <p className="text-sm font-semibold text-foreground truncate">
@@ -258,7 +258,7 @@ const Navbar = () => {
                                 <Link
                                     href="/sign-in"
                                     className={`
-                                    ml-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 cursor-pointer
+                                    ml-2 px-6 py-2.5 rounded-md text-sm font-medium transition-all duration-300 cursor-pointer
                                     ${isActive('/sign-in')
                                             ? "bg-gradient-to-r from-blue/20 to-primary/20 text-blue border border-blue/30 shadow-[0_0_25px_rgba(148,234,255,0.25)]"
                                             : "text-foreground/80 hover:text-foreground hover:bg-dark-200/50 border border-transparent hover:border-blue/20"
@@ -275,7 +275,7 @@ const Navbar = () => {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="md:hidden relative z-10 p-2.5 rounded-xl text-foreground hover:bg-dark-200/50 transition-colors duration-200"
+                        className="md:hidden relative z-10 p-2.5 rounded-md text-foreground hover:bg-dark-200/50 transition-colors duration-200"
                         aria-label="Toggle menu"
                         aria-expanded={isMenuOpen}
                     >
@@ -289,7 +289,7 @@ const Navbar = () => {
 
                 {/* Mobile Menu */}
                 {isMenuOpen && (
-                    <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 bg-dark-200/95 backdrop-blur-xl rounded-xl border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+                    <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 bg-dark-200/95 backdrop-blur-xl rounded-md border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
                         {/* User Info (if authenticated) */}
                         {isAuthenticated && user && (
                             <div className="px-4 py-3 border-b border-blue/10 bg-dark-100/50">

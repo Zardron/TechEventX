@@ -37,7 +37,7 @@ const NewsletterForm = () => {
     };
 
     return (
-        <div className="glass p-8 md:p-12 rounded-lg">
+        <div className="glass p-8 md:p-12 rounded-md">
             <div className="max-w-2xl mx-auto text-center">
                 <h2 className="text-3xl font-bold mb-3">Stay Updated with Latest Events</h2>
                 <p className="text-light-200 mb-8">
