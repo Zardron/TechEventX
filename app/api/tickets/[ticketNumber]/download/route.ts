@@ -291,40 +291,76 @@ export async function GET(
         doc.text('QR Code', rightColX + (columnWidth / 2), qrSectionStartY + 25, { align: 'center' });
         rightYPos = qrSectionStartY + 40; // Spacing after label
 
-        // Add QR Code image if available
-        if (ticket.qrCode) {
-            try {
-                // Convert data URL to base64
-                const base64Data = ticket.qrCode.replace(/^data:image\/\w+;base64,/, '');
-                
-                // Calculate QR code size and position (centered in column)
-                const qrX = rightColX + (columnWidth - qrSize) / 2;
-                
-                // White background for QR code
-                doc.setFillColor(255, 255, 255);
-                doc.rect(qrX - 8, rightYPos - 8, qrSize + 16, qrSize + 16, 'F');
-                
-                // Thin border around QR code
-                doc.setDrawColor(200, 200, 200);
-                doc.setLineWidth(1);
-                doc.rect(qrX - 8, rightYPos - 8, qrSize + 16, qrSize + 16);
-                
-                // Add QR code image
-                doc.addImage(base64Data, 'PNG', qrX, rightYPos, qrSize, qrSize);
-                rightYPos += qrSize + 15; // Spacing after QR code
-                
-                // Instruction text below QR code
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(180, 180, 180); // Light gray
-                rightYPos += 25; // Spacing after instruction
-            } catch (error) {
-                // If QR code image fails, just show text
-                doc.setFontSize(10);
-                doc.setTextColor(180, 180, 180);
-                doc.text('QR Code available on digital ticket', rightColX + (columnWidth / 2), rightYPos, { align: 'center' });
-                rightYPos += 30;
-            }
+        // Generate QR code on-demand using react-qr-code
+        try {
+            // Use dynamic imports to avoid Turbopack issues with react-dom/server
+            const React = (await import("react")).default;
+            const { renderToString } = await import("react-dom/server");
+            const QRCodeSVG = (await import("react-qr-code")).default;
+            const sharp = (await import("sharp")).default;
+            
+            const timestamp = ticket.createdAt instanceof Date 
+                ? ticket.createdAt.getTime() 
+                : new Date(ticket.createdAt).getTime();
+            
+            const qrCodeData = JSON.stringify({
+                ticketNumber: ticket.ticketNumber,
+                bookingId: ticket.bookingId.toString(),
+                timestamp,
+            });
+            
+            // Render QR code component to SVG string with higher resolution
+            const qrCodeSVG = renderToString(
+                React.createElement(QRCodeSVG, {
+                    value: qrCodeData,
+                    size: qrSize * 2, // Higher resolution for better quality
+                    bgColor: '#FFFFFF',
+                    fgColor: '#000000',
+                    level: 'M',
+                })
+            );
+            
+            // Extract SVG content (remove XML declaration if present)
+            const svgContent = qrCodeSVG.replace(/^<\?xml[^>]*\?>/, '').trim();
+            
+            // Convert SVG to PNG buffer using sharp and resize to desired size
+            const pngBuffer = await sharp(Buffer.from(svgContent))
+                .png()
+                .resize(qrSize, qrSize)
+                .toBuffer();
+            
+            // Convert PNG buffer to base64
+            const base64Data = pngBuffer.toString('base64');
+            
+            // Calculate QR code size and position (centered in column)
+            const qrX = rightColX + (columnWidth - qrSize) / 2;
+            
+            // White background for QR code
+            doc.setFillColor(255, 255, 255);
+            doc.rect(qrX - 8, rightYPos - 8, qrSize + 16, qrSize + 16, 'F');
+            
+            // Thin border around QR code
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(1);
+            doc.rect(qrX - 8, rightYPos - 8, qrSize + 16, qrSize + 16);
+            
+            // Add QR code image
+            doc.addImage(base64Data, 'PNG', qrX, rightYPos, qrSize, qrSize);
+            rightYPos += qrSize + 15; // Spacing after QR code
+            
+            // Instruction text below QR code
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(180, 180, 180); // Light gray
+            rightYPos += 25; // Spacing after instruction
+        } catch (error) {
+            // If QR code generation fails, just show text
+            console.error('Error generating QR code for PDF:', error);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(180, 180, 180);
+            doc.text('QR Code available on digital ticket', rightColX + (columnWidth / 2), rightYPos, { align: 'center' });
+            rightYPos += 30;
         }
 
         // Ticket Number section with background box

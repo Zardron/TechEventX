@@ -407,10 +407,39 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         let ticket = null;
         if (event.isFree || paymentIntentId || !paymentMethod) {
             const Ticket = (await import("@/database/ticket.model")).default;
-            const { generateTicketNumber, generateQRCode } = await import("@/lib/tickets");
+            const { generateTicketNumber } = await import("@/lib/tickets");
             
             const ticketNumber = generateTicketNumber();
-            const qrCode = await generateQRCode(ticketNumber, booking._id.toString());
+            
+            // Generate QR code using react-qr-code with dynamic imports to avoid Turbopack issues
+            const React = (await import("react")).default;
+            const { renderToString } = await import("react-dom/server");
+            const QRCodeSVG = (await import("react-qr-code")).default;
+            const sharp = (await import("sharp")).default;
+            
+            const qrCodeData = JSON.stringify({
+                ticketNumber,
+                bookingId: booking._id.toString(),
+                timestamp: Date.now(),
+            });
+            
+            const qrCodeSVG = renderToString(
+                React.createElement(QRCodeSVG, {
+                    value: qrCodeData,
+                    size: 256,
+                    bgColor: '#FFFFFF',
+                    fgColor: '#000000',
+                    level: 'M',
+                })
+            );
+            
+            const svgContent = qrCodeSVG.replace(/^<\?xml[^>]*\?>/, '').trim();
+            const pngBuffer = await sharp(Buffer.from(svgContent))
+                .png()
+                .toBuffer();
+            
+            const base64 = pngBuffer.toString('base64');
+            const qrCode = `data:image/png;base64,${base64}`;
 
             ticket = await Ticket.create({
                 bookingId: booking._id,

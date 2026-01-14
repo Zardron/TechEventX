@@ -1,4 +1,3 @@
-import QRCode from 'qrcode';
 import crypto from 'crypto';
 
 /**
@@ -8,34 +7,6 @@ export function generateTicketNumber(): string {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = crypto.randomBytes(4).toString('hex').toUpperCase();
     return `TKT-${timestamp}-${random}`;
-}
-
-/**
- * Generate QR code data URL for a ticket
- */
-export async function generateQRCode(ticketNumber: string, bookingId: string): Promise<string> {
-    const data = JSON.stringify({
-        ticketNumber,
-        bookingId,
-        timestamp: Date.now(),
-    });
-
-    try {
-        const qrCodeDataUrl = await QRCode.toDataURL(data, {
-            errorCorrectionLevel: 'M',
-            type: 'image/png',
-            quality: 0.92,
-            margin: 1,
-            color: {
-                dark: '#000000',
-                light: '#FFFFFF',
-            },
-        });
-        return qrCodeDataUrl;
-    } catch (error) {
-        console.error('Error generating QR code:', error);
-        throw new Error('Failed to generate QR code');
-    }
 }
 
 /**
