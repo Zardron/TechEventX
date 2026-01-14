@@ -84,14 +84,14 @@ export default function OrganizerWelcomeBanner() {
 
     return (
         <div className="mb-6">
-            <div className="glass rounded-2xl p-6 md:p-8 border border-primary/30 relative overflow-hidden">
+            <div className="glass rounded-md p-6 md:p-8 border border-primary/30 relative overflow-hidden">
                 {/* Background gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue/5 pointer-events-none" />
                 
                 {/* Close button */}
                 <button
                     onClick={handleDismiss}
-                    className="absolute top-4 right-4 p-2 hover:bg-background/50 rounded-lg transition-colors z-10"
+                    className="absolute top-4 right-4 p-2 hover:bg-background/50 rounded-md transition-colors z-10"
                     aria-label="Dismiss welcome message"
                 >
                     <X className="w-4 h-4 text-muted-foreground" />
@@ -119,10 +119,10 @@ export default function OrganizerWelcomeBanner() {
                                 <Link
                                     key={index}
                                     href={step.href}
-                                    className="p-4 rounded-xl border border-border/50 bg-background/30 hover:bg-background/50 hover:border-primary/30 transition-all group"
+                                    className="p-4 rounded-md border border-border/50 bg-background/30 hover:bg-background/50 hover:border-primary/30 transition-all group"
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                                        <div className={`w-10 h-10 rounded-md flex items-center justify-center shrink-0 ${
                                             step.completed ? 'bg-green-500/20' : 'bg-primary/10'
                                         }`}>
                                             {step.completed ? (

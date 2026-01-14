@@ -195,7 +195,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                 </div>
                 {/* Remaining Events Display */}
                 {isLoadingStats || isLoadingSubscription ? (
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 mr-2">
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50 border border-border/50 mr-2">
                         <Calendar className="w-4 h-4 text-muted-foreground shrink-0 animate-pulse" />
                         <div className="flex items-center gap-1.5">
                             <div className="h-3 w-12 bg-muted/50 rounded animate-pulse" />
@@ -204,7 +204,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                         </div>
                     </div>
                 ) : remainingEvents !== null ? (
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 mr-2">
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50 border border-border/50 mr-2">
                         <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
                         <div className="flex items-center gap-1.5">
                             <span className="text-xs text-muted-foreground whitespace-nowrap">Events:</span>
@@ -226,7 +226,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className={`
-                            flex items-center gap-1 sm:gap-2 lg:gap-3 px-1 sm:px-2 py-1 rounded-xl transition-all duration-300
+                            flex items-center gap-1 sm:gap-2 lg:gap-3 px-1 sm:px-2 py-1 rounded-md transition-all duration-300
                         `}
                         aria-label="User menu"
                     >
@@ -243,7 +243,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
 
                     {/* Dropdown Menu */}
                     {isMenuOpen && (
-                        <div className="absolute right-0 mt-3 w-48 sm:w-56 bg-dark-200/95 backdrop-blur-xl rounded-xl border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+                        <div className="absolute right-0 mt-3 w-48 sm:w-56 bg-dark-200/95 backdrop-blur-xl rounded-md border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
                             {/* User Info Section */}
                             <div className="px-4 py-3 border-b border-blue/10 bg-dark-100/50">
                                 <p className="text-sm font-semibold text-foreground truncate">

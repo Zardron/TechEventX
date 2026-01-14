@@ -196,7 +196,7 @@ const SideBar = () => {
                                     <button
                                         onClick={() => toggleDropdown(item.label)}
                                         className={`
-                                            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                                            w-full flex items-center gap-3 px-3 py-2.5 rounded-md
                                             transition-all duration-200 ease-in-out
                                             group relative cursor-pointer
                                             ${isItemActive
@@ -238,7 +238,7 @@ const SideBar = () => {
                                                         href={dropdownItem.href}
                                                         key={dropdownItem.href}
                                                         className={`
-                                                            flex items-center gap-3 px-3 py-2 rounded-lg
+                                                            flex items-center gap-3 px-3 py-2 rounded-md
                                                             transition-all duration-200 ease-in-out
                                                             group relative cursor-pointer
                                                             ${isDropdownActive
@@ -268,7 +268,7 @@ const SideBar = () => {
                                 <Link
                                     href={item.href}
                                     className={`
-                                        flex items-center gap-3 px-3 py-2.5 rounded-lg
+                                        flex items-center gap-3 px-3 py-2.5 rounded-md
                                         transition-all duration-200 ease-in-out
                                         group relative
                                         ${isItemActive

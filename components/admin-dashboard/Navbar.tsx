@@ -105,7 +105,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className={`
-                            flex items-center gap-1 sm:gap-2 lg:gap-3 px-1 sm:px-2 py-1 rounded-xl transition-all duration-300
+                            flex items-center gap-1 sm:gap-2 lg:gap-3 px-1 sm:px-2 py-1 rounded-md transition-all duration-300
                         `}
                         aria-label="User menu"
                     >
@@ -122,7 +122,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
 
                     {/* Dropdown Menu */}
                     {isMenuOpen && (
-                        <div className="absolute right-0 mt-3 w-48 sm:w-56 bg-dark-200/95 backdrop-blur-xl rounded-xl border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+                        <div className="absolute right-0 mt-3 w-48 sm:w-56 bg-dark-200/95 backdrop-blur-xl rounded-md border border-blue/20 shadow-2xl overflow-hidden z-50 animate-fade-in-up">
                             {/* User Info Section */}
                             <div className="px-4 py-3 border-b border-blue/10 bg-dark-100/50">
                                 <p className="text-sm font-semibold text-foreground truncate">
