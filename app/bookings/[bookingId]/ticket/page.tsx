@@ -7,10 +7,10 @@ import { Calendar, MapPin, Clock, QrCode, Download, ArrowLeft, UserPlus, FileTex
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/ui/form-input";
 import { formatDateToReadable, formatDateTo12Hour } from "@/lib/formatters";
-import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
+import QRCodeSVG from "react-qr-code";
 
 interface TicketData {
     id: string;
@@ -259,12 +259,16 @@ export default function BookingTicketPage() {
                                     <QrCode className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
                                     <h3 className="font-semibold mb-4">QR Code</h3>
                                     <div className="bg-white p-4 rounded-lg inline-block">
-                                        <Image
-                                            src={ticket.qrCode}
-                                            alt="QR Code"
-                                            width={200}
-                                            height={200}
-                                            className="mx-auto"
+                                        <QRCodeSVG
+                                            value={JSON.stringify({
+                                                ticketNumber: ticket.ticketNumber,
+                                                bookingId: bookingId || '',
+                                                timestamp: Date.now(),
+                                            })}
+                                            size={200}
+                                            bgColor="#FFFFFF"
+                                            fgColor="#000000"
+                                            level="M"
                                         />
                                     </div>
                                     <p className="text-sm text-muted-foreground mt-4">

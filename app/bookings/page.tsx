@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
+import QRCodeSVG from "react-qr-code";
 import {
   Calendar,
   ChevronLeft,
@@ -459,12 +460,16 @@ const BookingsPage = () => {
                     <QrCode className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
                     <h3 className="font-semibold mb-4">QR Code</h3>
                     <div className="bg-white p-4 rounded-lg inline-block">
-                      <Image
-                        src={ticket.qrCode}
-                        alt="QR Code"
-                        width={200}
-                        height={200}
-                        className="mx-auto"
+                      <QRCodeSVG
+                        value={JSON.stringify({
+                          ticketNumber: ticket.ticketNumber,
+                          bookingId: ticket.bookingId || '',
+                          timestamp: Date.now(),
+                        })}
+                        size={200}
+                        bgColor="#FFFFFF"
+                        fgColor="#000000"
+                        level="M"
                       />
                     </div>
                     <p className="text-sm text-muted-foreground mt-4">
@@ -925,18 +930,9 @@ const BookingsPage = () => {
                     </div>
                   </Link>
                   <div className="p-5 pt-0 flex items-center justify-between">
-                    {booking.ticketNumber ? (
+                    {booking.ticketNumber && (booking.paymentStatus === 'confirmed' || !booking.paymentStatus) && (
                       <Link
                         href={`/bookings?id=${booking.id}&ticketNumber=${booking.ticketNumber}`}
-                        className="text-sm text-blue hover:underline"
-                      >
-                        View Ticket →
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/bookings/${booking.id}/ticket`}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="text-sm text-blue hover:underline"
                       >
                         View Ticket →
