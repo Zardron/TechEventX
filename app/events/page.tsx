@@ -61,9 +61,9 @@ const EventsPage = () => {
                     <AnimateOnScroll delay={100} variant="fade">
                         <div className="max-w-5xl mx-auto">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="glass p-6 rounded-xl border border-blue/10 hover:border-blue/30 transition-all duration-300">
+                                <div className="glass p-6 rounded-md border border-blue/10 hover:border-blue/30 transition-all duration-300">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-10 h-10 rounded-lg bg-blue/10 flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-md bg-blue/10 flex items-center justify-center">
                                             <Image src="/icons/calendar.svg" alt="Calendar" width={20} height={20} />
                                         </div>
                                         <h3 className="text-lg font-semibold">Diverse Formats</h3>
@@ -73,9 +73,9 @@ const EventsPage = () => {
                                     </p>
                                 </div>
 
-                                <div className="glass p-6 rounded-xl border border-blue/10 hover:border-blue/30 transition-all duration-300">
+                                <div className="glass p-6 rounded-md border border-blue/10 hover:border-blue/30 transition-all duration-300">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-10 h-10 rounded-lg bg-blue/10 flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-md bg-blue/10 flex items-center justify-center">
                                             <Image src="/icons/audience.svg" alt="Audience" width={20} height={20} />
                                         </div>
                                         <h3 className="text-lg font-semibold">Expert Speakers</h3>
@@ -85,9 +85,9 @@ const EventsPage = () => {
                                     </p>
                                 </div>
 
-                                <div className="glass p-6 rounded-xl border border-blue/10 hover:border-blue/30 transition-all duration-300">
+                                <div className="glass p-6 rounded-md border border-blue/10 hover:border-blue/30 transition-all duration-300">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-10 h-10 rounded-lg bg-blue/10 flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-md bg-blue/10 flex items-center justify-center">
                                             <Image src="/icons/mode.svg" alt="Network" width={20} height={20} />
                                         </div>
                                         <h3 className="text-lg font-semibold">Networking</h3>
@@ -104,7 +104,7 @@ const EventsPage = () => {
                     {allEvents.length > 0 && (
                         <AnimateOnScroll delay={200} variant="fade">
                             <div className="mt-10 text-center">
-                                <div className="glass p-6 rounded-xl border border-blue/10 max-w-3xl mx-auto">
+                                <div className="glass p-6 rounded-md border border-blue/10 max-w-3xl mx-auto">
                                     <p className="text-light-100 text-base leading-relaxed">
                                         Browse through our curated collection of events organized by leading tech companies, developer communities, and educational institutions. Each event includes detailed information about the agenda, speakers, venue, and registration process to help you make informed decisions.
                                     </p>
@@ -144,13 +144,13 @@ const EventsPage = () => {
             {/* Enhanced Summary Section */}
             {allEvents.length > 0 && (
                 <AnimateOnScroll variant="glow" delay={200}>
-                    <div className="mt-24 glass p-10 rounded-2xl border border-blue/20 hover:border-blue/40 transition-all duration-300">
+                    <div className="mt-24 glass p-10 rounded-md border border-blue/20 hover:border-blue/40 transition-all duration-300">
                         <div className="text-center mb-8">
                             <h2 className="text-3xl font-bold mb-3">Event Statistics</h2>
                             <p className="text-light-200">A comprehensive overview of our event calendar</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="text-center p-6 rounded-xl bg-dark-100/50 border border-blue/10 hover:border-blue/30 transition-all duration-300">
+                            <div className="text-center p-6 rounded-md bg-dark-100/50 border border-blue/10 hover:border-blue/30 transition-all duration-300">
                                 <div className="inline-block p-4 rounded-full bg-blue/10 mb-4">
                                     <Image src="/icons/calendar.svg" alt="Events" width={32} height={32} />
                                 </div>
@@ -158,7 +158,7 @@ const EventsPage = () => {
                                 <p className="text-light-200 font-medium">Total Events</p>
                                 <p className="text-light-200 text-xs mt-2 opacity-70">Across all dates</p>
                             </div>
-                            <div className="text-center p-6 rounded-xl bg-dark-100/50 border border-blue/10 hover:border-blue/30 transition-all duration-300">
+                            <div className="text-center p-6 rounded-md bg-dark-100/50 border border-blue/10 hover:border-blue/30 transition-all duration-300">
                                 <div className="inline-block p-4 rounded-full bg-blue/10 mb-4">
                                     <Image src="/icons/clock.svg" alt="Dates" width={32} height={32} />
                                 </div>
@@ -166,7 +166,7 @@ const EventsPage = () => {
                                 <p className="text-light-200 font-medium">Event Dates</p>
                                 <p className="text-light-200 text-xs mt-2 opacity-70">Unique dates scheduled</p>
                             </div>
-                            <div className="text-center p-6 rounded-xl bg-dark-100/50 border border-blue/10 hover:border-blue/30 transition-all duration-300">
+                            <div className="text-center p-6 rounded-md bg-dark-100/50 border border-blue/10 hover:border-blue/30 transition-all duration-300">
                                 <div className="inline-block p-4 rounded-full bg-blue/10 mb-4">
                                     <Image src="/icons/pin.svg" alt="Locations" width={32} height={32} />
                                 </div>

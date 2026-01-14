@@ -14,8 +14,8 @@ import toast from "react-hot-toast";
 
 const InfoBadge = ({ icon, label, value }: { icon: string, label: string, value: string }) => {
     return (
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-dark-200/30 border border-border-dark/30 hover:border-primary/30 transition-all duration-300 backdrop-blur-sm">
-            <div className="shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+        <div className="flex items-center gap-3 p-4 rounded-md bg-dark-200/30 border border-border-dark/30 hover:border-primary/30 transition-all duration-300 backdrop-blur-sm">
+            <div className="shrink-0 w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center">
                 <Image src={icon} alt={label} width={20} height={20} className="opacity-90" />
             </div>
             <div className="flex flex-col">
@@ -215,12 +215,12 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
 
                             {/* Location & Price Badges */}
                             <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2 px-5 py-3 rounded-xl bg-dark-200/50 border border-border-dark/50 w-fit">
+                                <div className="flex items-center gap-2 px-5 py-3 rounded-md bg-dark-200/50 border border-border-dark/50 w-fit">
                                     <Image src="/icons/pin.svg" alt="Location" width={18} height={18} className="opacity-90" />
                                     <span className="text-light-100 font-medium">{location}</span>
                                 </div>
                                 {/* Price Badge */}
-                                <div className={`flex items-center gap-2 px-5 py-3 rounded-xl border w-fit ${
+                                <div className={`flex items-center gap-2 px-5 py-3 rounded-md border w-fit ${
                                     isFree 
                                         ? "bg-green-500/10 border-green-500/30" 
                                         : "bg-primary/10 border-primary/30"
@@ -236,7 +236,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
 
                         {/* Right Column - Image */}
                         <div className="relative order-1 lg:order-2">
-                            <div className="relative aspect-4/3 rounded-2xl overflow-hidden border border-border-dark/50 shadow-2xl">
+                            <div className="relative aspect-4/3 rounded-md overflow-hidden border border-border-dark/50 shadow-2xl">
                                 <Image
                                     src={image}
                                     alt={title}
@@ -285,7 +285,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                             </div>
 
                             {/* Overview Section */}
-                            <section className="glass rounded-2xl p-6 md:p-8 border border-border-dark/50">
+                            <section className="glass rounded-md p-6 md:p-8 border border-border-dark/50">
                                 <div className="flex items-center gap-3 mb-4 md:mb-6">
                                     <div className="w-1 h-6 md:h-8 bg-primary rounded-full" />
                                     <h2 className="text-2xl md:text-3xl font-bold">Overview</h2>
@@ -296,55 +296,55 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                             </section>
 
                             {/* Event Details */}
-                            <section className="glass rounded-2xl p-6 md:p-8 border border-border-dark/50">
+                            <section className="glass rounded-md p-6 md:p-8 border border-border-dark/50">
                                 <div className="flex items-center gap-3 mb-4 md:mb-6">
                                     <div className="w-1 h-6 md:h-8 bg-primary rounded-full" />
                                     <h2 className="text-2xl md:text-3xl font-bold">Event Details</h2>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                    <div className="flex items-start gap-4 p-4 rounded-md bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
                                         <Image src="/icons/calendar.svg" alt="Date" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Date</p>
                                             <p className="text-base font-semibold text-light-100">{formatDateToReadable(date)}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                    <div className="flex items-start gap-4 p-4 rounded-md bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
                                         <Image src="/icons/clock.svg" alt="Time" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Time</p>
                                             <p className="text-base font-semibold text-light-100">{formatDateTo12Hour(time)}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                    <div className="flex items-start gap-4 p-4 rounded-md bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
                                         <Image src="/icons/pin.svg" alt="Venue" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Venue</p>
                                             <p className="text-base font-semibold text-light-100">{venue}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                    <div className="flex items-start gap-4 p-4 rounded-md bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
                                         <Image src="/icons/mode.svg" alt="Mode" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Mode</p>
                                             <p className="text-base font-semibold text-light-100">{mode}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                    <div className="flex items-start gap-4 p-4 rounded-md bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
                                         <Image src="/icons/audience.svg" alt="Audience" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Audience</p>
                                             <p className="text-base font-semibold text-light-100">{audience}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                    <div className="flex items-start gap-4 p-4 rounded-md bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
                                         <Image src="/icons/audience.svg" alt="Organizer" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Organizer</p>
                                             <p className="text-base font-semibold text-light-100">{organizerName}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
+                                    <div className="flex items-start gap-4 p-4 rounded-md bg-dark-200/20 hover:bg-dark-200/30 transition-colors duration-200">
                                         <Image src="/icons/audience.svg" alt="Price" width={20} height={20} className="mt-1 opacity-80" />
                                         <div>
                                             <p className="text-xs text-light-200 uppercase tracking-wider mb-1">Price</p>
@@ -359,7 +359,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                             </section>
 
                             {/* Agenda Section */}
-                            <section className="glass rounded-2xl p-6 md:p-8 border border-border-dark/50">
+                            <section className="glass rounded-md p-6 md:p-8 border border-border-dark/50">
                                 <div className="flex items-center gap-3 mb-6 md:mb-8">
                                     <div className="w-1 h-6 md:h-8 bg-primary rounded-full" />
                                     <h2 className="text-2xl md:text-3xl font-bold">Agenda</h2>
@@ -377,7 +377,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                             </section>
 
                             {/* Organizer Section */}
-                            <section className="glass rounded-2xl p-6 md:p-8 border border-border-dark/50">
+                            <section className="glass rounded-md p-6 md:p-8 border border-border-dark/50">
                                 <div className="flex items-center gap-3 mb-4 md:mb-6">
                                     <div className="w-1 h-6 md:h-8 bg-primary rounded-full" />
                                     <h2 className="text-2xl md:text-3xl font-bold">About the Organizer</h2>
@@ -388,13 +388,13 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                             </section>
 
                             {/* All Tags */}
-                            <section className="glass rounded-2xl p-6 md:p-8 border border-border-dark/50">
+                            <section className="glass rounded-md p-6 md:p-8 border border-border-dark/50">
                                 <h3 className="text-lg md:text-xl font-semibold mb-4 text-light-100">Tags</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {tags.map((tag: string, index: number) => (
                                         <span
                                             key={index}
-                                            className="px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium border border-primary/20 hover:bg-primary/20 transition-colors duration-200"
+                                            className="px-4 py-2 rounded-md bg-primary/10 text-primary text-sm font-medium border border-primary/20 hover:bg-primary/20 transition-colors duration-200"
                                         >
                                             {tag}
                                         </span>
@@ -406,7 +406,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                         {/* Right Column - Booking Card */}
                         <div className="lg:col-span-1">
                             <div className="sticky top-20 lg:top-24">
-                                <div className="glass rounded-2xl p-6 md:p-8 border border-primary/30 card-shadow" style={{ boxShadow: '0 0 10px rgba(89, 222, 202, 0.1), 0 0 20px rgba(89, 222, 202, 0.05)' }}>
+                                <div className="glass rounded-md p-6 md:p-8 border border-primary/30 card-shadow" style={{ boxShadow: '0 0 10px rgba(89, 222, 202, 0.1), 0 0 20px rgba(89, 222, 202, 0.05)' }}>
                                     <div className="mb-6">
                                         <h2 className="text-xl md:text-2xl font-bold mb-3">Book Your Spot</h2>
                                         {bookings > 0 ? (
