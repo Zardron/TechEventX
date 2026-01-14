@@ -945,7 +945,7 @@ const BookingsPage = () => {
                         handleCancelBooking(booking.id, booking.event.title)
                       }
                       disabled={cancellingId === booking.id}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/20"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border border-red-500"
                     >
                       <X className="w-4 h-4 mr-1" />
                       {cancellingId === booking.id ? "Cancelling..." : "Cancel"}
