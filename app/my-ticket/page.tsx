@@ -9,6 +9,7 @@ import { formatDateToReadable, formatDateTo12Hour } from "@/lib/formatters";
 import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import QRCodeSVG from "react-qr-code";
 
 interface TicketData {
     id: string;
@@ -135,13 +136,12 @@ export default function MyTicketPage() {
                                         <QrCode className="w-8 h-8 mx-auto mb-4 text-primary" />
                                         <h3 className="text-xl font-semibold mb-6 text-light-100">QR Code</h3>
                                         <div className="bg-white p-6 rounded-md inline-block shadow-lg">
-                                            <Image
-                                                src={ticket.qrCode}
-                                                alt="QR Code"
-                                                width={250}
-                                                height={250}
-                                                className="mx-auto"
-                                                priority
+                                            <QRCodeSVG
+                                                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify/${ticket.ticketNumber}`}
+                                                size={250}
+                                                bgColor="#FFFFFF"
+                                                fgColor="#000000"
+                                                level="M"
                                             />
                                         </div>
                                         <p className="text-sm text-light-200 mt-6">

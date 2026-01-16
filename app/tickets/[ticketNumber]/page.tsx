@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatDateToReadable, formatDateTo12Hour } from "@/lib/formatters";
 import toast from "react-hot-toast";
 import QRCodeSVG from "react-qr-code";
+import Image from "next/image";
 
 interface TicketData {
     id: string;
@@ -224,11 +225,7 @@ export default function TicketPage() {
                                     <h3 className="font-semibold mb-4">QR Code</h3>
                                     <div className="bg-white p-4 rounded-md inline-block">
                                         <QRCodeSVG
-                                            value={JSON.stringify({
-                                                ticketNumber: ticket.ticketNumber,
-                                                bookingId: ticket.bookingId || '',
-                                                timestamp: Date.now(),
-                                            })}
+                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify/${ticket.ticketNumber}`}
                                             size={200}
                                             bgColor="#FFFFFF"
                                             fgColor="#000000"

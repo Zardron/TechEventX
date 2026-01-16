@@ -299,20 +299,18 @@ export async function GET(
             const QRCodeSVG = (await import("react-qr-code")).default;
             const sharp = (await import("sharp")).default;
             
-            const timestamp = ticket.createdAt instanceof Date 
-                ? ticket.createdAt.getTime() 
-                : new Date(ticket.createdAt).getTime();
+            // Get base URL from request or environment variable
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                           (req.headers.get('origin') || 
+                            `https://${req.headers.get('host') || 'localhost:3000'}`);
             
-            const qrCodeData = JSON.stringify({
-                ticketNumber: ticket.ticketNumber,
-                bookingId: ticket.bookingId.toString(),
-                timestamp,
-            });
+            // Generate QR code with URL pointing to verification page
+            const qrCodeUrl = `${baseUrl}/verify/${ticket.ticketNumber}`;
             
             // Render QR code component to SVG string with higher resolution
             const qrCodeSVG = renderToString(
                 React.createElement(QRCodeSVG, {
-                    value: qrCodeData,
+                    value: qrCodeUrl,
                     size: qrSize * 2, // Higher resolution for better quality
                     bgColor: '#FFFFFF',
                     fgColor: '#000000',

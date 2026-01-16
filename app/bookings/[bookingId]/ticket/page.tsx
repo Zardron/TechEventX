@@ -11,6 +11,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
 import QRCodeSVG from "react-qr-code";
+import Image from "next/image";
 
 interface TicketData {
     id: string;
@@ -260,11 +261,7 @@ export default function BookingTicketPage() {
                                     <h3 className="font-semibold mb-4">QR Code</h3>
                                     <div className="bg-white p-4 rounded-md inline-block">
                                         <QRCodeSVG
-                                            value={JSON.stringify({
-                                                ticketNumber: ticket.ticketNumber,
-                                                bookingId: bookingId || '',
-                                                timestamp: Date.now(),
-                                            })}
+                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify/${ticket.ticketNumber}`}
                                             size={200}
                                             bgColor="#FFFFFF"
                                             fgColor="#000000"

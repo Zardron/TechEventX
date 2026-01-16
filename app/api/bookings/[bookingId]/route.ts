@@ -142,15 +142,17 @@ export async function PATCH(
                 const QRCodeSVG = (await import("react-qr-code")).default;
                 const sharp = (await import("sharp")).default;
                 
-                const qrCodeData = JSON.stringify({
-                    ticketNumber,
-                    bookingId: booking._id.toString(),
-                    timestamp: Date.now(),
-                });
+                // Get base URL from request or environment variable
+                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                               (req.headers.get('origin') || 
+                                `https://${req.headers.get('host') || 'localhost:3000'}`);
+                
+                // Generate QR code with URL pointing to verification page
+                const qrCodeUrl = `${baseUrl}/verify/${ticketNumber}`;
                 
                 const qrCodeSVG = renderToString(
                     React.createElement(QRCodeSVG, {
-                        value: qrCodeData,
+                        value: qrCodeUrl,
                         size: 256,
                         bgColor: '#FFFFFF',
                         fgColor: '#000000',
