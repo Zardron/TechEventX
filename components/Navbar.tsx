@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from "react"
 import { Menu, X, User, ChevronDown, Calendar, LogOut, LayoutDashboardIcon, CreditCard, Heart, Bell, FileText, Ticket } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/hooks/use-auth"
-import ThemeToggle from "./ThemeToggle"
 import NotificationCenter from "./NotificationCenter"
 
 const Navbar = () => {
@@ -254,7 +253,6 @@ const Navbar = () => {
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">
-                                <ThemeToggle />
                                 <Link
                                     href="/sign-in"
                                     className={`
