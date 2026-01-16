@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react"
 import { useAuth } from "@/lib/hooks/use-auth"
 import { useQuery } from "@tanstack/react-query"
 import { useAuthStore } from "@/lib/store/auth.store"
-import { useOrganizerStats } from "@/lib/hooks/api/organizer.queries"
+import { useOrganizerStats, useCurrentOrganizer } from "@/lib/hooks/api/organizer.queries"
 import NotificationCenter from "@/components/NotificationCenter"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -43,6 +43,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
 
     // Fetch organizer stats to get event count
     const { data: statsData, isLoading: isLoadingStats } = useOrganizerStats();
+    const { data: organizerData } = useCurrentOrganizer();
 
     // Fix: handleSuccessResponse spreads the data object, so plans are directly in plansData.plans
     const plans = plansData?.plans || plansData?.data?.plans || [];
@@ -116,7 +117,10 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
         setIsMenuOpen(false)
         window.location.href = '/sign-in'
     }
-    // Get user initials for avatar
+    // Get organizer name (fallback to user name if organizer not found)
+    const organizerName = organizerData?.data?.organizer?.name || organizerData?.organizer?.name || user?.name || 'User';
+    
+    // Get user initials for avatar (use organizer name for initials)
     const getUserInitials = (name: string | undefined): string => {
         if (!name || name.trim().length === 0) return ''
         const words = name.trim().split(' ').filter(n => n.length > 0)
@@ -231,13 +235,13 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                         aria-label="User menu"
                     >
                     <span className="hidden sm:inline text-sm lg:text-base xl:text-lg font-semibold text-foreground whitespace-nowrap">
-                        Welcome, <span className="text-blue capitalize">{user?.name || 'User'}</span>
+                        <span className="text-blue capitalize">{organizerName}</span>
                     </span>
                     <span className="sm:hidden text-sm font-semibold text-foreground whitespace-nowrap">
-                        <span className="text-blue capitalize">{user?.name?.split(' ')[0] || 'User'}</span>
+                        <span className="text-blue capitalize">{organizerName.split(' ')[0]}</span>
                     </span>
                         <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-primary/30 via-primary/20 to-blue/30 border-2 border-blue/40 flex items-center justify-center text-xs font-bold text-foreground shadow-[0_0_15px_rgba(148,234,255,0.2)] cursor-pointer shrink-0">
-                            {getUserInitials(user?.name) || <User className="w-3 h-3 sm:w-4 sm:h-4" />}
+                            {getUserInitials(organizerName) || <User className="w-3 h-3 sm:w-4 sm:h-4" />}
                         </div>
                     </button>
 
@@ -247,7 +251,7 @@ const Navbar = ({ sideBarCollapsed, setSideBarCollapsed }: { sideBarCollapsed: b
                             {/* User Info Section */}
                             <div className="px-4 py-3 border-b border-blue/10 bg-dark-100/50">
                                 <p className="text-sm font-semibold text-foreground truncate">
-                                    {user?.name}
+                                    {user?.name || organizerName}
                                 </p>
                                 <p className="text-xs text-foreground/60 truncate">
                                     {user?.email}

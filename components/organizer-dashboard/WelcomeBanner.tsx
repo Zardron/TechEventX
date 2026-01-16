@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useCurrentOrganizer } from "@/lib/hooks/api/organizer.queries";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Calendar, DollarSign, Users, BarChart3, Sparkles, ArrowRight, X } from "lucide-react";
 import Link from "next/link";
@@ -14,6 +15,7 @@ export default function OrganizerWelcomeBanner() {
     const { user } = useAuth();
     const router = useRouter();
     const [dismissed, setDismissed] = useState(false);
+    const { data: organizerData } = useCurrentOrganizer();
 
     // Check subscription status
     const { data: subscriptionData } = useQuery({
@@ -31,6 +33,8 @@ export default function OrganizerWelcomeBanner() {
 
     const hasActiveSubscription = subscriptionData?.data?.subscription?.status === 'active' || 
                                   subscriptionData?.data?.subscription?.status === 'trialing';
+    
+    const organizerName = organizerData?.data?.organizer?.name || organizerData?.organizer?.name || user?.name || 'Organizer';
 
     // Check if dismissed in localStorage
     useEffect(() => {
@@ -104,7 +108,7 @@ export default function OrganizerWelcomeBanner() {
                             <Sparkles className="w-6 h-6 text-primary" />
                         </div>
                         <div className="flex-1">
-                            <h2 className="text-2xl font-bold mb-2">Welcome to Organizer Dashboard!</h2>
+                            <h2 className="text-2xl font-bold mb-2">{organizerName}</h2>
                             <p className="text-muted-foreground">
                                 Congratulations on becoming an organizer! Here's a quick guide to get you started.
                             </p>

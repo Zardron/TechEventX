@@ -47,8 +47,8 @@ const sideBarItems = [
         icon: RefreshCw
     },
     {
-        href: "/organizer-dashboard/payouts",
-        label: "Payouts",
+        href: "/organizer-dashboard/payments",
+        label: "Payments",
         icon: DollarSign
     },
     {

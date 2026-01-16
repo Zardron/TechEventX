@@ -66,10 +66,10 @@ const GUIDE_STEPS = [
         href: "/organizer-dashboard/promo-codes",
     },
     {
-        title: "Payouts & Revenue",
-        description: "Track your earnings, view payout history, and manage your revenue from all events.",
+        title: "Payments & Revenue",
+        description: "Track your earnings, view payment history, and manage your revenue from all events.",
         icon: DollarSign,
-        href: "/organizer-dashboard/payouts",
+        href: "/organizer-dashboard/payments",
     },
     {
         title: "Check-In History",

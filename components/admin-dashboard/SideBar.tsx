@@ -90,8 +90,8 @@ const sideBarItems = [
         icon: DollarSign,
     },
     {
-        href: "/admin-dashboard/payouts",
-        label: "Payouts",
+        href: "/admin-dashboard/payments",
+        label: "Payments",
         icon: RefreshCw,
     },
     {

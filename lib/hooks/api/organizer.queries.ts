@@ -272,3 +272,50 @@ export const useOrganizer = (organizerId: string | undefined) => {
         enabled: !!token && !!organizerId,
     });
 };
+
+// Hook to fetch current organizer's data (for logged-in organizer)
+export const useCurrentOrganizer = () => {
+    const { token } = useAuthStore();
+
+    return useQuery<OrganizerResponse>({
+        queryKey: ["organizer", "current"],
+        queryFn: async () => {
+            if (!token) {
+                throw new Error("Not authenticated");
+            }
+
+            // First, get user profile to get organizerId
+            const profileResponse = await fetch("/api/users/profile", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!profileResponse.ok) {
+                throw new Error("Failed to fetch user profile");
+            }
+
+            const profileData = await profileResponse.json();
+            const organizerId = profileData?.data?.user?.organizerId || profileData?.user?.organizerId;
+
+            if (!organizerId) {
+                throw new Error("User is not associated with an organizer");
+            }
+
+            // Then fetch organizer data
+            const response = await fetch(`/api/admin/organizers/${organizerId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Failed to fetch organizer");
+            }
+
+            return response.json();
+        },
+        enabled: !!token,
+    });
+};
