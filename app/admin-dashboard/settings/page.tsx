@@ -391,14 +391,14 @@ export default function SettingsPage() {
                                                 name="minimumPayoutAmount"
                                                 type="number"
                                                 step="0.01"
-                                                label="Minimum Payout Amount"
+                                                label="Minimum Payment Amount"
                                                 placeholder="10.00"
                                                 value={formData.minimumPayoutAmount}
                                                 onChange={handleChange}
                                                 error={errors.minimumPayoutAmount}
                                                 required
                                                 min="0"
-                                                helperText="Minimum amount organizers can request for payout"
+                                                helperText="Minimum amount organizers can request for payment"
                                             />
 
                                             <FormSelect
@@ -777,9 +777,9 @@ export default function SettingsPage() {
                                         </p>
                                     </div>
                                     <div className="space-y-2">
-                                        <h3 className="font-semibold text-sm">Payout Settings</h3>
+                                        <h3 className="font-semibold text-sm">Payment Settings</h3>
                                         <p className="text-sm text-muted-foreground">
-                                            Configure the minimum amount organizers must accumulate before requesting a payout.
+                                            Configure the minimum amount organizers must accumulate before requesting a payment.
                                         </p>
                                     </div>
                                 </div>

@@ -152,7 +152,7 @@ export default function RefundsPage() {
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-lg font-semibold">{request.event.title}</h3>
+                                        <h3 className="text-lg font-semibold">{request.event?.title || 'Unknown Event'}</h3>
                                         <span
                                             className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
                                                 request.status === "completed"
@@ -166,12 +166,12 @@ export default function RefundsPage() {
                                     <div className="grid md:grid-cols-2 gap-4 text-sm mt-4">
                                         <div>
                                             <p className="text-muted-foreground">Customer</p>
-                                            <p className="font-semibold">{request.user.name}</p>
-                                            <p className="text-muted-foreground text-xs">{request.user.email}</p>
+                                            <p className="font-semibold">{request.user?.name || 'Unknown'}</p>
+                                            <p className="text-muted-foreground text-xs">{request.user?.email || ''}</p>
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground">Event Date</p>
-                                            <p className="font-semibold">{formatDateToReadable(request.event.date)}</p>
+                                            <p className="font-semibold">{request.event?.date ? formatDateToReadable(request.event.date) : 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground">Transaction Amount</p>

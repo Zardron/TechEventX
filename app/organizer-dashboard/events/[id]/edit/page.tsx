@@ -63,7 +63,12 @@ export default function EditEventPage() {
             }
 
             const data = await response.json();
-            const event = data.data.event;
+            // handleSuccessResponse spreads the data object, so event is at root level
+            const event = data.event || data.data?.event;
+
+            if (!event) {
+                throw new Error("Event data not found in response");
+            }
 
             setFormData({
                 title: event.title || "",

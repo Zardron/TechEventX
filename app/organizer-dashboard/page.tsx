@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Calendar, Ticket, DollarSign, Clock, Plus, TrendingUp, Download, Filter, ArrowUp } from "lucide-react";
 import { useAuthStore } from "@/lib/store/auth.store";
-import { useOrganizerStats, useOrganizerEvents } from "@/lib/hooks/api/organizer.queries";
+import { useOrganizerStats, useOrganizerEvents, useCurrentOrganizer } from "@/lib/hooks/api/organizer.queries";
 import { FormInput } from "@/components/ui/form-input";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
@@ -28,6 +28,7 @@ export default function OrganizerDashboardPage() {
         startDate: "",
         endDate: "",
     });
+    const { data: organizerData } = useCurrentOrganizer();
 
     // Calculate date range based on selected time range
     const { startDate, endDate } = useMemo(() => {
@@ -123,38 +124,46 @@ export default function OrganizerDashboardPage() {
         enabled: !!token,
     });
 
+    // Get organizer name (fallback to 'Organizer' if not loaded yet)
+    const organizerName = organizerData?.data?.organizer?.name || organizerData?.organizer?.name || 'Organizer';
+
     // Filter data based on date range
     const filteredData = useMemo(() => {
+        // handleSuccessResponse spreads the data object, so stats are at root level
+        // Also support nested structure for backward compatibility
         const statsData = stats?.data || {
-            totalEvents: 0,
-            upcomingEvents: 0,
-            totalBookings: 0,
-            totalRevenue: 0,
-            monthlyRevenue: 0,
-            recentEvents: [],
+            totalEvents: stats?.totalEvents || 0,
+            upcomingEvents: stats?.upcomingEvents || 0,
+            totalBookings: stats?.totalBookings || 0,
+            totalRevenue: stats?.totalRevenue || 0,
+            monthlyRevenue: stats?.monthlyRevenue || 0,
+            recentEvents: stats?.recentEvents || [],
         };
 
-        const events = eventsData?.data?.events || [];
+        const events = eventsData?.data?.events || eventsData?.events || [];
         
-        // Filter events by creation date
-        const filteredEvents = timeRange === 'all' 
-            ? events 
-            : events.filter((event: any) => {
-                const eventDate = new Date(event.createdAt);
-                return eventDate >= startDate && eventDate <= endDate;
-            });
+        // Show all events (not filtered by creation date for the count)
+        // The time range filter applies to bookings/revenue, not event creation
+        const allEvents = events;
 
         // Calculate filtered stats
         const today = new Date().toISOString().split('T')[0];
+        
+        // Use analytics data for period-specific metrics if available
+        const analytics = analyticsData?.data || {};
+        
         const filteredStats = {
-            totalEvents: filteredEvents.length,
-            upcomingEvents: filteredEvents.filter((e: any) => {
+            // Show all events (not filtered by date range)
+            totalEvents: allEvents.length,
+            upcomingEvents: allEvents.filter((e: any) => {
                 return e.date >= today && e.status === 'published';
             }).length,
-            totalBookings: statsData.totalBookings, // Use stats from API (would need date filtering in API for accuracy)
-            totalRevenue: analyticsData?.data?.periodRevenue || statsData.totalRevenue,
+            // Use period bookings from analytics if available, otherwise use all-time from stats
+            totalBookings: analytics.periodBookings !== undefined ? analytics.periodBookings : statsData.totalBookings,
+            // Use period revenue from analytics if available, otherwise use all-time from stats
+            totalRevenue: analytics.periodRevenue !== undefined ? analytics.periodRevenue : statsData.totalRevenue,
             monthlyRevenue: statsData.monthlyRevenue, // Use stats from API
-            recentEvents: filteredEvents
+            recentEvents: allEvents
                 .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .slice(0, 5)
                 .map((e: any) => ({
@@ -168,7 +177,7 @@ export default function OrganizerDashboardPage() {
 
         return {
             stats: filteredStats,
-            events: filteredEvents,
+            events: allEvents,
         };
     }, [stats, eventsData, analyticsData, startDate, endDate, timeRange]);
 
@@ -248,7 +257,7 @@ export default function OrganizerDashboardPage() {
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold">Organizer Dashboard</h1>
                     <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                        Welcome to the organizer dashboard. Manage your events from here.
+                        {organizerName} - Manage your events from here.
                     </p>
                 </div>
 
@@ -276,7 +285,7 @@ export default function OrganizerDashboardPage() {
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold">Organizer Dashboard</h1>
                     <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                        Welcome to the organizer dashboard. Manage your events from here.
+                        {organizerName} - Manage your events from here.
                     </p>
                 </div>
                 <div className="flex items-center justify-center h-64">
@@ -344,7 +353,7 @@ export default function OrganizerDashboardPage() {
                         )}
                     </div>
                     <p className="text-muted-foreground text-sm sm:text-base">
-                        Welcome to the organizer dashboard. Manage your events from here.
+                        {organizerName} - Manage your events from here.
                     </p>
                 </div>
                 <Button variant="outline" onClick={handleExport}>
@@ -447,9 +456,9 @@ export default function OrganizerDashboardPage() {
                 />
                 <StatCard
                     title="Total Revenue"
-                    value={`$${(statsData.totalRevenue / 100).toFixed(2)}`}
+                    value={`₱${(statsData.totalRevenue / 100).toFixed(2)}`}
                     icon={<DollarSign className="h-5 w-5" />}
-                    href="/organizer-dashboard/payouts"
+                    href="/organizer-dashboard/payments"
                     timeRange={getTimeRangeLabel()}
                 />
             </div>

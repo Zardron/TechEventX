@@ -10,25 +10,25 @@ import { DollarSign, Clock, Check, X, AlertCircle, RefreshCw } from "lucide-reac
 import toast from "react-hot-toast";
 import { formatDateToReadable } from "@/lib/formatters";
 
-export default function AdminPayoutsPage() {
+export default function AdminPaymentsPage() {
     const { token } = useAuthStore();
     const queryClient = useQueryClient();
     const [statusFilter, setStatusFilter] = useState<string>("");
     const [selectedPayout, setSelectedPayout] = useState<string | null>(null);
     const [failureReason, setFailureReason] = useState("");
 
-    // Fetch payouts
+    // Fetch payments
     const { data, isLoading, error } = useQuery({
-        queryKey: ["admin", "payouts", statusFilter],
+        queryKey: ["admin", "payments", statusFilter],
         queryFn: async () => {
             if (!token) throw new Error("Not authenticated");
             const url = statusFilter 
-                ? `/api/admin/payouts?status=${statusFilter}`
-                : "/api/admin/payouts";
+                ? `/api/admin/payments?status=${statusFilter}`
+                : "/api/admin/payments";
             const response = await fetch(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            if (!response.ok) throw new Error("Failed to fetch payouts");
+            if (!response.ok) throw new Error("Failed to fetch payments");
             return response.json();
         },
         enabled: !!token,
@@ -44,11 +44,11 @@ export default function AdminPayoutsPage() {
         totalCompletedAmount: 0,
     };
 
-    // Update payout status mutation
+    // Update payment status mutation
     const updateStatusMutation = useMutation({
         mutationFn: async ({ payoutId, status, failureReason }: { payoutId: string; status: string; failureReason?: string }) => {
             if (!token) throw new Error("Not authenticated");
-            const response = await fetch(`/api/admin/payouts/${payoutId}`, {
+            const response = await fetch(`/api/admin/payments/${payoutId}`, {
                 method: "PATCH",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -58,18 +58,18 @@ export default function AdminPayoutsPage() {
             });
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.message || "Failed to update payout status");
+                throw new Error(data.message || "Failed to update payment status");
             }
             return response.json();
         },
         onSuccess: () => {
-            toast.success("Payout status updated successfully");
-            queryClient.invalidateQueries({ queryKey: ["admin", "payouts"] });
+            toast.success("Payment status updated successfully");
+            queryClient.invalidateQueries({ queryKey: ["admin", "payments"] });
             setSelectedPayout(null);
             setFailureReason("");
         },
         onError: (error: any) => {
-            toast.error(error.message || "Failed to update payout status");
+            toast.error(error.message || "Failed to update payment status");
         },
     });
 
@@ -119,7 +119,7 @@ export default function AdminPayoutsPage() {
                     ))}
                 </div>
 
-                {/* Payouts List Skeleton */}
+                {/* Payments List Skeleton */}
                 <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
                         <div key={i} className="p-6 border rounded-md bg-card animate-pulse">
@@ -153,7 +153,7 @@ export default function AdminPayoutsPage() {
     if (error) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-red-500">Error loading payouts</div>
+                <div className="text-red-500">Error loading payments</div>
             </div>
         );
     }
@@ -162,9 +162,9 @@ export default function AdminPayoutsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Payout Management</h1>
+                    <h1 className="text-3xl font-bold">Payment Management</h1>
                     <p className="text-muted-foreground mt-2">
-                        Process organizer payout requests
+                        Process organizer payment requests
                     </p>
                 </div>
                 <FormSelect
@@ -215,11 +215,11 @@ export default function AdminPayoutsPage() {
                 </div>
             </div>
 
-            {/* Payouts List */}
+            {/* Payments List */}
             {payouts.length === 0 ? (
                 <div className="p-12 text-center border rounded-md bg-card">
                     <DollarSign className="w-16 h-16 mx-auto text-muted-foreground/20 mb-4" />
-                    <p className="text-muted-foreground">No payout requests found</p>
+                    <p className="text-muted-foreground">No payment requests found</p>
                 </div>
             ) : (
                 <div className="space-y-4">

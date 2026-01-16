@@ -10,7 +10,7 @@ import { DollarSign, TrendingUp, CreditCard, Clock, Check, X, AlertCircle, Plus 
 import toast from "react-hot-toast";
 import { formatDateToReadable } from "@/lib/formatters";
 
-export default function PayoutsPage() {
+export default function PaymentsPage() {
     const { token } = useAuthStore();
     const queryClient = useQueryClient();
     const [showRequestForm, setShowRequestForm] = useState(false);
@@ -23,15 +23,15 @@ export default function PayoutsPage() {
         paypalEmail: "",
     });
 
-    // Fetch payout data
+    // Fetch payment data
     const { data, isLoading, error } = useQuery({
-        queryKey: ["organizer", "payouts"],
+        queryKey: ["organizer", "payments"],
         queryFn: async () => {
             if (!token) throw new Error("Not authenticated");
-            const response = await fetch("/api/organizer/payouts", {
+            const response = await fetch("/api/organizer/payments", {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            if (!response.ok) throw new Error("Failed to fetch payout data");
+            if (!response.ok) throw new Error("Failed to fetch payment data");
             return response.json();
         },
         enabled: !!token,
@@ -46,27 +46,27 @@ export default function PayoutsPage() {
         unpaidTransactionCount: 0,
     };
 
-    // Request payout mutation
-    const requestPayoutMutation = useMutation({
-        mutationFn: async (payoutData: any) => {
+    // Request payment mutation
+    const requestPaymentMutation = useMutation({
+        mutationFn: async (paymentData: any) => {
             if (!token) throw new Error("Not authenticated");
-            const response = await fetch("/api/organizer/payouts", {
+            const response = await fetch("/api/organizer/payments", {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(payoutData),
+                body: JSON.stringify(paymentData),
             });
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.message || "Failed to request payout");
+                throw new Error(data.message || "Failed to request payment");
             }
             return response.json();
         },
         onSuccess: () => {
-            toast.success("Payout request submitted successfully");
-            queryClient.invalidateQueries({ queryKey: ["organizer", "payouts"] });
+            toast.success("Payment request submitted successfully");
+            queryClient.invalidateQueries({ queryKey: ["organizer", "payments"] });
             setShowRequestForm(false);
             setFormData({
                 amount: "",
@@ -78,7 +78,7 @@ export default function PayoutsPage() {
             });
         },
         onError: (error: any) => {
-            toast.error(error.message || "Failed to request payout");
+            toast.error(error.message || "Failed to request payment");
         },
     });
 
@@ -98,7 +98,7 @@ export default function PayoutsPage() {
             accountDetails.paypalEmail = formData.paypalEmail;
         }
 
-        requestPayoutMutation.mutate({
+        requestPaymentMutation.mutate({
             amount: Math.round(parseFloat(formData.amount) * 100), // Convert to cents
             paymentMethod: formData.paymentMethod,
             accountDetails,
@@ -138,7 +138,7 @@ export default function PayoutsPage() {
                     ))}
                 </div>
 
-                {/* Payout History Skeleton */}
+                {/* Payment History Skeleton */}
                 <div className="border rounded-md bg-card overflow-hidden animate-pulse">
                     <div className="p-6 border-b">
                         <div className="h-6 bg-muted rounded w-40"></div>
@@ -173,7 +173,7 @@ export default function PayoutsPage() {
     if (error) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-red-500">Error loading payout data</div>
+                <div className="text-red-500">Error loading payment data</div>
             </div>
         );
     }
@@ -182,9 +182,9 @@ export default function PayoutsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Payouts</h1>
+                    <h1 className="text-3xl font-bold">Payments</h1>
                     <p className="text-muted-foreground mt-2">
-                        Request payouts for your event revenue
+                        Request payments for your event revenue
                     </p>
                 </div>
                 <Button
@@ -192,7 +192,7 @@ export default function PayoutsPage() {
                     disabled={payoutData.availableBalance < 1000}
                 >
                     <Plus className="w-4 h-4 mr-2" />
-                    Request Payout
+                    Request Payment
                 </Button>
             </div>
 
@@ -204,7 +204,7 @@ export default function PayoutsPage() {
                         <DollarSign className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <p className="text-2xl font-bold text-green-500">{formatPrice(payoutData.availableBalance)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Ready for payout</p>
+                    <p className="text-xs text-muted-foreground mt-1">Ready for payment</p>
                 </div>
                 <div className="p-6 border rounded-md bg-card">
                     <div className="flex items-center justify-between mb-2">
@@ -235,7 +235,7 @@ export default function PayoutsPage() {
             {/* Request Form */}
             {showRequestForm && (
                 <div className="p-6 border rounded-md bg-card">
-                    <h2 className="text-xl font-semibold mb-4">Request Payout</h2>
+                    <h2 className="text-xl font-semibold mb-4">Request Payment</h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <FormInput
                             label="Amount (PHP)"
@@ -289,8 +289,8 @@ export default function PayoutsPage() {
                             />
                         )}
                         <div className="flex gap-2">
-                            <Button type="submit" disabled={requestPayoutMutation.isPending}>
-                                {requestPayoutMutation.isPending ? "Submitting..." : "Submit Request"}
+                            <Button type="submit" disabled={requestPaymentMutation.isPending}>
+                                {requestPaymentMutation.isPending ? "Submitting..." : "Submit Request"}
                             </Button>
                             <Button
                                 type="button"
@@ -314,15 +314,15 @@ export default function PayoutsPage() {
                 </div>
             )}
 
-            {/* Payout History */}
+            {/* Payment History */}
             <div className="border rounded-md bg-card overflow-hidden">
                 <div className="p-6 border-b">
-                    <h2 className="text-xl font-semibold">Payout History</h2>
+                    <h2 className="text-xl font-semibold">Payment History</h2>
                 </div>
                 {payoutData.payouts.length === 0 ? (
                     <div className="p-12 text-center">
                         <CreditCard className="w-16 h-16 mx-auto text-muted-foreground/20 mb-4" />
-                        <p className="text-muted-foreground">No payout requests yet</p>
+                        <p className="text-muted-foreground">No payment requests yet</p>
                     </div>
                 ) : (
                     <div className="divide-y">
