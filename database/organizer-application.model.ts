@@ -88,7 +88,6 @@ const organizerApplicationSchema = new Schema<IOrganizerApplication>(
     },
     {
         timestamps: true,
-        strictPopulate: false,
     }
 );
 

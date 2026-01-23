@@ -203,15 +203,6 @@ const eventSchema = new Schema<IEvent>(
                 message: 'Agenda must be a non-empty array of strings',
             },
         },
-        organizer: {
-            type: String,
-            required: [true, 'Organizer is required'],
-            trim: true,
-            validate: {
-                validator: (v: string) => v.trim().length > 0,
-                message: 'Organizer cannot be empty',
-            },
-        },
         organizerId: {
             type: Schema.Types.ObjectId,
             ref: 'User',

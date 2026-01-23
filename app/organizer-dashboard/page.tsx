@@ -279,7 +279,7 @@ export default function OrganizerDashboardPage() {
     }
 
     // Handle error case - only show error if there's an actual error from the query
-    if (error || (stats && !stats.data && stats.success === false)) {
+    if (error || (stats && !stats.data)) {
         return (
             <div className="space-y-6">
                 <div>

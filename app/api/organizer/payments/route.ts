@@ -5,6 +5,7 @@ import User from "@/database/user.model";
 import Transaction from "@/database/transaction.model";
 import Payout from "@/database/payout.model";
 import Event from "@/database/event.model";
+import Payment from "@/database/payment.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 
 // GET - Get payment history and available balance
@@ -62,9 +63,28 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         }
 
         // Get organizer's events
+        // Use the same query logic as stats API to handle both cases:
+        // 1. Events where organizerId = user.organizerId (events pointing to Organizer)
+        // 2. Events where organizerId = user._id (events pointing to User - backward compatibility)
         const mongoose = await import('mongoose');
+        const queryConditions: any[] = [];
+        
+        // If user has organizerId, find events where organizerId matches the Organizer
+        if (user.organizerId) {
+            const organizerIdObj = user.organizerId instanceof mongoose.Types.ObjectId
+                ? user.organizerId
+                : new mongoose.Types.ObjectId(user.organizerId.toString());
+            queryConditions.push({ organizerId: organizerIdObj });
+        }
+        
+        // Also check for events where organizerId points directly to the User (backward compatibility)
+        const userId = user._id instanceof mongoose.Types.ObjectId 
+            ? user._id 
+            : new mongoose.Types.ObjectId(user._id.toString());
+        queryConditions.push({ organizerId: userId });
+
         const events = await Event.find({
-            organizerId: organizerId
+            $or: queryConditions
         });
 
         if (events.length === 0) {
@@ -83,32 +103,107 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
         const eventIds = events.map(e => e._id);
 
-        // Get all transactions for organizer's events (include pending and completed)
-        // We'll filter by status later if needed, but show all successful payments
-        const transactions = await Transaction.find({
+        // Debug logging
+        console.log('🔍 Payments API Debug:');
+        console.log('  Organizer ID:', organizerId);
+        console.log('  Events found:', events.length);
+        console.log('  Event IDs:', eventIds.map(id => id.toString()));
+
+        // Get all payments for organizer's events (use Payment model like dashboard does)
+        // Only count payments that have been confirmed (succeeded status)
+        const payments = await Payment.find({
             eventId: { $in: eventIds },
-            status: { $in: ['completed', 'pending'] } // Include pending as they might be paid but not yet marked complete
+            status: 'succeeded' // Only include confirmed payments (matching dashboard logic)
         });
 
-        // Calculate available balance (organizer revenue from unpaid transactions)
+        console.log('  Payments found:', payments.length);
+        if (payments.length > 0) {
+            console.log('  Sample payment:', {
+                id: payments[0]._id.toString(),
+                eventId: payments[0].eventId?.toString(),
+                amount: payments[0].amount,
+                status: payments[0].status
+            });
+        }
+
+        // Get all transactions for organizer's events (to get organizerRevenue)
+        const transactions = await Transaction.find({
+            eventId: { $in: eventIds },
+            status: { $in: ['completed', 'pending'] }
+        });
+
+        // Create a map of bookingId to transaction for quick lookup
+        const transactionMap = new Map();
+        transactions.forEach((t: any) => {
+            if (t.bookingId) {
+                transactionMap.set(t.bookingId.toString(), t);
+            }
+        });
+
+        // Calculate revenue from payments (matching dashboard logic)
+        // Use Payment records to calculate total revenue, then calculate organizer revenue
+        const { calculateRevenue } = await import("@/lib/tickets");
+        let totalEarned = 0;
+        
+        payments.forEach((payment: any) => {
+            // Find corresponding transaction to get organizerRevenue
+            const transaction = payment.bookingId 
+                ? transactionMap.get(payment.bookingId.toString())
+                : null;
+            
+            if (transaction && transaction.organizerRevenue) {
+                // Use transaction's organizerRevenue if available
+                totalEarned += transaction.organizerRevenue;
+            } else {
+                // If no transaction found, calculate organizer revenue from payment amount
+                const { organizerRevenue } = calculateRevenue(payment.amount);
+                totalEarned += organizerRevenue;
+            }
+        });
+
+        // Calculate available balance (organizer revenue from unpaid payments)
         const payouts = await Payout.find({
             organizerId: organizerId,
             status: { $in: ['pending', 'processing', 'completed'] }
         });
 
         const paidTransactionIds = new Set();
+        const paidPaymentIds = new Set();
         payouts.forEach((payout: any) => {
-            payout.transactionIds.forEach((id: any) => {
-                paidTransactionIds.add(id.toString());
-            });
+            if (payout.transactionIds && Array.isArray(payout.transactionIds)) {
+                payout.transactionIds.forEach((id: any) => {
+                    paidTransactionIds.add(id.toString());
+                });
+            }
+            // Also track paid payment IDs if stored in payout
+            if (payout.paymentIds && Array.isArray(payout.paymentIds)) {
+                payout.paymentIds.forEach((id: any) => {
+                    paidPaymentIds.add(id.toString());
+                });
+            }
         });
 
-        const unpaidTransactions = transactions.filter((t: any) => 
-            !paidTransactionIds.has(t._id.toString())
+        // Calculate available balance from unpaid payments
+        const unpaidPayments = payments.filter((p: any) => 
+            !paidPaymentIds.has(p._id.toString())
         );
 
-        const availableBalance = unpaidTransactions.reduce((sum, t) => sum + (t.organizerRevenue || 0), 0);
-        const totalEarned = transactions.reduce((sum, t) => sum + (t.organizerRevenue || 0), 0);
+        let availableBalance = 0;
+        unpaidPayments.forEach((payment: any) => {
+            // Find corresponding transaction to get organizerRevenue
+            const transaction = payment.bookingId 
+                ? transactionMap.get(payment.bookingId.toString())
+                : null;
+            
+            if (transaction && transaction.organizerRevenue && !paidTransactionIds.has(transaction._id.toString())) {
+                availableBalance += transaction.organizerRevenue;
+            } else if (!transaction) {
+                // If no transaction found, calculate organizer revenue from payment amount
+                const { organizerRevenue } = calculateRevenue(payment.amount);
+                availableBalance += organizerRevenue;
+            }
+        });
+
         const totalPaid = payouts
             .filter((p: any) => p.status === 'completed')
             .reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -137,77 +232,108 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             createdAt: payout.createdAt,
         }));
 
-        // Get all transactions (individual event payments)
-        // Include both completed and pending statuses
-        // Note: Pending transactions are for manual payments that haven't been confirmed yet
-        const allTransactions = await Transaction.find({
+        // Get all payments for payment history (use Payment records like dashboard)
+        // Only show succeeded payments to match dashboard revenue calculation
+        const allPaymentRecords = await Payment.find({
             eventId: { $in: eventIds },
-            status: { $in: ['completed', 'pending'] },
-            amount: { $gt: 0 } // Only show transactions with amount > 0 (exclude free events)
+            status: 'succeeded', // Only show confirmed payments (matching dashboard)
+            amount: { $gt: 0 } // Only show payments with amount > 0 (exclude free events)
         })
             .populate('eventId', 'title slug')
             .populate('userId', 'name email')
             .populate('bookingId', 'ticketNumber')
             .sort({ createdAt: -1 });
 
-        const formattedTransactions = allTransactions
-            .filter((transaction: any) => {
-                // Filter out free events (amount = 0) unless they have organizerRevenue
-                if (transaction.amount === 0 && !transaction.organizerRevenue) {
+        const formattedTransactions = allPaymentRecords
+            .filter((payment: any) => {
+                // Filter out free events (amount = 0)
+                if (payment.amount === 0) {
                     return false;
                 }
                 return true;
             })
-            .map((transaction: any) => {
-                // Calculate organizer revenue if not set (for backward compatibility)
-                const organizerRevenue = transaction.organizerRevenue ?? (transaction.amount - (transaction.platformFee || 0));
+            .map((payment: any) => {
+                // Find corresponding transaction for detailed info (platform fee, organizer revenue, etc.)
+                const transaction = payment.bookingId 
+                    ? transactionMap.get(payment.bookingId.toString())
+                    : null;
+                
+                // Calculate organizer revenue
+                let organizerRevenue = 0;
+                let platformFee = 0;
+                let discountAmount = 0;
+                
+                if (transaction) {
+                    organizerRevenue = transaction.organizerRevenue ?? 0;
+                    platformFee = transaction.platformFee || 0;
+                    discountAmount = transaction.discountAmount || 0;
+                } else {
+                    // If no transaction found, calculate from payment amount
+                    const { platformFee: calcPlatformFee, organizerRevenue: calcOrganizerRevenue } = calculateRevenue(payment.amount);
+                    organizerRevenue = calcOrganizerRevenue;
+                    platformFee = calcPlatformFee;
+                    // Try to get discount from payment metadata
+                    discountAmount = payment.metadata?.discountAmount || 0;
+                }
                 
                 return {
-                    id: transaction._id.toString(),
+                    id: payment._id.toString(),
                     type: 'event_payment',
-                    amount: organizerRevenue > 0 ? organizerRevenue : transaction.amount, // Show organizer revenue, fallback to total amount
-                    totalAmount: transaction.amount,
-                    currency: transaction.currency,
-                    status: transaction.status || 'completed',
-                    paymentMethod: transaction.paymentMethod,
-                    event: transaction.eventId ? {
-                        id: transaction.eventId._id?.toString() || transaction.eventId.toString(),
-                        title: transaction.eventId.title || 'Unknown Event',
-                        slug: transaction.eventId.slug || null,
+                    amount: organizerRevenue > 0 ? organizerRevenue : payment.amount, // Show organizer revenue, fallback to payment amount
+                    totalAmount: payment.amount,
+                    currency: payment.currency,
+                    status: 'completed', // Payment records with status 'succeeded' are completed
+                    paymentMethod: payment.paymentMethod,
+                    event: payment.eventId ? {
+                        id: payment.eventId._id?.toString() || payment.eventId.toString(),
+                        title: payment.eventId.title || 'Unknown Event',
+                        slug: payment.eventId.slug || null,
                     } : null,
-                    attendee: transaction.userId ? {
-                        id: transaction.userId._id?.toString() || transaction.userId.toString(),
-                        name: transaction.userId.name || 'Unknown',
-                        email: transaction.userId.email || 'N/A',
+                    attendee: payment.userId ? {
+                        id: payment.userId._id?.toString() || payment.userId.toString(),
+                        name: payment.userId.name || 'Unknown',
+                        email: payment.userId.email || 'N/A',
                     } : null,
-                    booking: transaction.bookingId ? {
-                        id: transaction.bookingId._id?.toString() || transaction.bookingId.toString(),
-                        ticketNumber: transaction.bookingId.ticketNumber || null,
+                    booking: payment.bookingId ? {
+                        id: payment.bookingId._id?.toString() || payment.bookingId.toString(),
+                        ticketNumber: payment.bookingId.ticketNumber || null,
                     } : null,
-                    platformFee: transaction.platformFee || 0,
-                    discountAmount: transaction.discountAmount || 0,
-                    createdAt: transaction.createdAt,
-                    paidAt: transaction.createdAt, // Use createdAt as paidAt for transactions
+                    platformFee: platformFee,
+                    discountAmount: discountAmount,
+                    createdAt: payment.createdAt,
+                    paidAt: payment.paidAt || payment.createdAt,
                 };
             });
 
         // Combine payment requests and transactions, sorted by date (newest first)
         const allPayments = [...formattedPayouts, ...formattedTransactions].sort((a, b) => {
-            const dateA = a.createdAt || a.requestedAt || a.paidAt;
-            const dateB = b.createdAt || b.requestedAt || b.paidAt;
-            return new Date(dateB).getTime() - new Date(dateA).getTime();
+            const dateA = a.createdAt || ('requestedAt' in a ? a.requestedAt : null) || ('paidAt' in a ? a.paidAt : null);
+            const dateB = b.createdAt || ('requestedAt' in b ? b.requestedAt : null) || ('paidAt' in b ? b.paidAt : null);
+            return new Date(dateB || 0).getTime() - new Date(dateA || 0).getTime();
         });
 
-        return handleSuccessResponse("Payment data retrieved successfully", {
+        const responseData = {
+            data: {
+                availableBalance,
+                totalEarned,
+                totalPaid,
+                pendingBalance: totalEarned - totalPaid - availableBalance,
+                payouts: allPayments,
+                paymentRequests: formattedPayouts,
+                transactions: formattedTransactions,
+                unpaidTransactionCount: unpaidPayments.length,
+            }
+        };
+
+        console.log('📤 Response data:', {
             availableBalance,
             totalEarned,
             totalPaid,
-            pendingBalance: totalEarned - totalPaid - availableBalance,
-            payouts: allPayments,
-            paymentRequests: formattedPayouts,
-            transactions: formattedTransactions,
-            unpaidTransactionCount: unpaidTransactions.length,
+            payoutsCount: allPayments.length,
+            transactionsCount: formattedTransactions.length,
         });
+
+        return handleSuccessResponse("Payment data retrieved successfully", responseData);
     } catch (error) {
         return handleApiError(error);
     }
@@ -269,9 +395,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // Get organizer's events
+        // Get organizer's events (use same query logic as GET method)
+        const mongoose = await import('mongoose');
+        const queryConditions: any[] = [];
+        
+        if (user.organizerId) {
+            const organizerIdObj = user.organizerId instanceof mongoose.Types.ObjectId
+                ? user.organizerId
+                : new mongoose.Types.ObjectId(user.organizerId.toString());
+            queryConditions.push({ organizerId: organizerIdObj });
+        }
+        
+        const userId = user._id instanceof mongoose.Types.ObjectId 
+            ? user._id 
+            : new mongoose.Types.ObjectId(user._id.toString());
+        queryConditions.push({ organizerId: userId });
+
         const events = await Event.find({
-            organizerId: user.organizerId
+            $or: queryConditions
         });
 
         const eventIds = events.map(e => e._id);

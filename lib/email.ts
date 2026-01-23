@@ -50,7 +50,7 @@ class SendGridService implements EmailService {
                 to: options.to,
                 from: {
                     email: options.from || this.fromEmail,
-                    name: options.fromName || this.fromName,
+                    name: this.fromName,
                 },
                 subject: options.subject,
                 text: options.text || options.html.replace(/<[^>]*>/g, ''),
@@ -259,6 +259,40 @@ export const emailTemplates = {
                         <p>Welcome to TechEventX! We're excited to have you join our community of tech enthusiasts.</p>
                         <p>Start exploring amazing tech events happening around the world.</p>
                         <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://techeventx.com'}/events" class="button">Browse Events</a>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `,
+    }),
+
+    bookingCancellation: (eventTitle: string, eventDate: string, eventTime: string, hasRefund: boolean = false) => ({
+        subject: `Booking Cancelled: ${eventTitle}`,
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                    .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>❌ Booking Cancelled</h1>
+                    </div>
+                    <div class="content">
+                        <p>Your booking for <strong>${eventTitle}</strong> has been cancelled.</p>
+                        <p><strong>Date:</strong> ${eventDate}</p>
+                        <p><strong>Time:</strong> ${eventTime}</p>
+                        ${hasRefund ? '<p><strong>Refund:</strong> A refund has been processed and will be credited to your account within 5-7 business days.</p>' : ''}
+                        <p>If you have any questions, please contact our support team.</p>
+                        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://techeventx.com'}/bookings" class="button">View My Bookings</a>
                     </div>
                 </div>
             </body>

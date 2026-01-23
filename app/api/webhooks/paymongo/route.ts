@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Subscription from "@/database/subscription.model";
+import Booking from "@/database/booking.model";
+import Transaction from "@/database/transaction.model";
+import Ticket from "@/database/ticket.model";
+import Event from "@/database/event.model";
+import Notification from "@/database/notification.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 import { verifyWebhookSignature } from "@/lib/paymongo";
 
@@ -89,28 +94,135 @@ async function handlePaymentPaid(paymentData: any) {
 
         console.log('Processing payment.paid event for intent:', paymentIntentId);
 
-        // Find subscription by payment intent ID
+        // First, try to find and update subscription
         const subscription = await Subscription.findOne({
             paymongoPaymentIntentId: paymentIntentId
         }).populate('planId');
 
-        if (!subscription) {
-            console.warn('Subscription not found for payment intent:', paymentIntentId);
-            return;
+        if (subscription) {
+            // Update subscription status and planId
+            const metadata = payment.attributes?.metadata || payment.metadata || {};
+            const purchasedPlanId = metadata.planId;
+
+            if (purchasedPlanId) {
+                subscription.planId = purchasedPlanId as any;
+            }
+
+            subscription.status = 'active';
+            await subscription.save();
+
+            console.log('✅ Subscription activated via webhook for payment intent:', paymentIntentId);
         }
 
-        // Update subscription status and planId
-        const metadata = payment.attributes?.metadata || payment.metadata || {};
-        const purchasedPlanId = metadata.planId;
+        // Also check for booking payments
+        const transaction = await Transaction.findOne({
+            paymongoPaymentIntentId: paymentIntentId
+        });
 
-        if (purchasedPlanId) {
-            subscription.planId = purchasedPlanId as any;
+        if (transaction && transaction.bookingId) {
+            const booking = await Booking.findById(transaction.bookingId);
+            
+            if (booking && booking.paymentStatus !== 'confirmed') {
+                // Update booking payment status
+                booking.paymentStatus = 'confirmed';
+                await booking.save();
+
+                // Update transaction status
+                transaction.status = 'completed';
+                await transaction.save();
+
+                // Generate ticket if it doesn't exist
+                let ticket = await Ticket.findOne({ bookingId: booking._id });
+                if (!ticket) {
+                    const { generateTicketNumber } = await import("@/lib/tickets");
+                    const React = (await import("react")).default;
+                    const { renderToString } = await import("react-dom/server");
+                    const QRCodeSVG = (await import("react-qr-code")).default;
+                    const sharp = (await import("sharp")).default;
+
+                    const ticketNumber = generateTicketNumber();
+                    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                                   (process.env.NODE_ENV === 'production' 
+                                       ? 'https://yourdomain.com' 
+                                       : 'http://localhost:3000');
+                    const qrCodeUrl = `${baseUrl}/verify/${ticketNumber}`;
+
+                    const qrCodeSVG = renderToString(
+                        React.createElement(QRCodeSVG, {
+                            value: qrCodeUrl,
+                            size: 256,
+                            bgColor: '#FFFFFF',
+                            fgColor: '#000000',
+                            level: 'M',
+                        })
+                    );
+
+                    const svgContent = qrCodeSVG.replace(/^<\?xml[^>]*\?>/, '').trim();
+                    const pngBuffer = await sharp(Buffer.from(svgContent))
+                        .png()
+                        .toBuffer();
+
+                    const base64 = pngBuffer.toString('base64');
+                    const qrCode = `data:image/png;base64,${base64}`;
+
+                    ticket = await Ticket.create({
+                        bookingId: booking._id,
+                        ticketNumber,
+                        qrCode,
+                        status: 'active',
+                    });
+
+                    console.log('✅ Ticket generated via webhook for booking:', booking._id);
+                }
+
+                // Update event available tickets
+                const event = await Event.findById(booking.eventId);
+                if (event && event.capacity) {
+                    event.availableTickets = Math.max(0, (event.availableTickets || event.capacity) - 1);
+                    await event.save();
+                }
+
+                // Send confirmation notification
+                const { formatDateToReadable, formatDateTo12Hour } = await import("@/lib/formatters");
+                await Notification.create({
+                    userId: booking.userId,
+                    type: 'user_booking_confirmation',
+                    title: 'Booking Confirmed',
+                    message: `Your booking for ${event?.title || 'the event'} has been confirmed. Ticket: ${ticket?.ticketNumber || 'N/A'}`,
+                    link: `/my-ticket?bookingId=${booking._id.toString()}`,
+                    metadata: {
+                        eventId: booking.eventId.toString(),
+                        bookingId: booking._id.toString(),
+                        ticketNumber: ticket?.ticketNumber,
+                    },
+                });
+
+                // Send email notification
+                try {
+                    const User = (await import("@/database/user.model")).default;
+                    const user = await User.findById(booking.userId);
+                    if (user && user.email && event) {
+                        const { sendEmail, emailTemplates } = await import("@/lib/email");
+                        const emailContent = emailTemplates.bookingConfirmation(
+                            event.title,
+                            formatDateToReadable(event.date),
+                            formatDateTo12Hour(event.time),
+                            ticket?.ticketNumber || ''
+                        );
+
+                        await sendEmail({
+                            to: user.email,
+                            subject: emailContent.subject,
+                            html: emailContent.html,
+                        });
+                    }
+                } catch (emailError) {
+                    console.error('Failed to send booking confirmation email:', emailError);
+                }
+
+                console.log('✅ Booking confirmed via webhook for payment intent:', paymentIntentId);
+            }
         }
-
-        subscription.status = 'active';
-        await subscription.save();
-
-        console.log('✅ Subscription activated via webhook for payment intent:', paymentIntentId);
     } catch (error: any) {
         console.error('Error handling payment.paid webhook:', error);
     }
@@ -202,27 +314,134 @@ async function handleCheckoutSessionPaymentPaid(checkoutData: any) {
             return;
         }
 
-        // Find subscription by payment intent ID
+        // First, try to find and update subscription
         const subscription = await Subscription.findOne({
             paymongoPaymentIntentId: paymentIntentId
         }).populate('planId');
 
-        if (!subscription) {
-            console.warn('Subscription not found for payment intent:', paymentIntentId);
-            return;
+        if (subscription) {
+            // Update subscription status and planId
+            const purchasedPlanId = metadata.planId;
+
+            if (purchasedPlanId) {
+                subscription.planId = purchasedPlanId as any;
+            }
+
+            subscription.status = 'active';
+            await subscription.save();
+
+            console.log('✅ Subscription activated via checkout_session.payment.paid webhook for payment intent:', paymentIntentId);
         }
 
-        // Update subscription status and planId
-        const purchasedPlanId = metadata.planId;
+        // Also check for booking payments (same logic as handlePaymentPaid)
+        const transaction = await Transaction.findOne({
+            paymongoPaymentIntentId: paymentIntentId
+        });
 
-        if (purchasedPlanId) {
-            subscription.planId = purchasedPlanId as any;
+        if (transaction && transaction.bookingId) {
+            const booking = await Booking.findById(transaction.bookingId);
+            
+            if (booking && booking.paymentStatus !== 'confirmed') {
+                // Update booking payment status
+                booking.paymentStatus = 'confirmed';
+                await booking.save();
+
+                // Update transaction status
+                transaction.status = 'completed';
+                await transaction.save();
+
+                // Generate ticket if it doesn't exist
+                let ticket = await Ticket.findOne({ bookingId: booking._id });
+                if (!ticket) {
+                    const { generateTicketNumber } = await import("@/lib/tickets");
+                    const React = (await import("react")).default;
+                    const { renderToString } = await import("react-dom/server");
+                    const QRCodeSVG = (await import("react-qr-code")).default;
+                    const sharp = (await import("sharp")).default;
+
+                    const ticketNumber = generateTicketNumber();
+                    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                                   (process.env.NODE_ENV === 'production' 
+                                       ? 'https://yourdomain.com' 
+                                       : 'http://localhost:3000');
+                    const qrCodeUrl = `${baseUrl}/verify/${ticketNumber}`;
+
+                    const qrCodeSVG = renderToString(
+                        React.createElement(QRCodeSVG, {
+                            value: qrCodeUrl,
+                            size: 256,
+                            bgColor: '#FFFFFF',
+                            fgColor: '#000000',
+                            level: 'M',
+                        })
+                    );
+
+                    const svgContent = qrCodeSVG.replace(/^<\?xml[^>]*\?>/, '').trim();
+                    const pngBuffer = await sharp(Buffer.from(svgContent))
+                        .png()
+                        .toBuffer();
+
+                    const base64 = pngBuffer.toString('base64');
+                    const qrCode = `data:image/png;base64,${base64}`;
+
+                    ticket = await Ticket.create({
+                        bookingId: booking._id,
+                        ticketNumber,
+                        qrCode,
+                        status: 'active',
+                    });
+
+                    console.log('✅ Ticket generated via webhook for booking:', booking._id);
+                }
+
+                // Update event available tickets
+                const event = await Event.findById(booking.eventId);
+                if (event && event.capacity) {
+                    event.availableTickets = Math.max(0, (event.availableTickets || event.capacity) - 1);
+                    await event.save();
+                }
+
+                // Send confirmation notification
+                const { formatDateToReadable, formatDateTo12Hour } = await import("@/lib/formatters");
+                await Notification.create({
+                    userId: booking.userId,
+                    type: 'user_booking_confirmation',
+                    title: 'Booking Confirmed',
+                    message: `Your booking for ${event?.title || 'the event'} has been confirmed. Ticket: ${ticket?.ticketNumber || 'N/A'}`,
+                    link: `/my-ticket?bookingId=${booking._id.toString()}`,
+                    metadata: {
+                        eventId: booking.eventId.toString(),
+                        bookingId: booking._id.toString(),
+                        ticketNumber: ticket?.ticketNumber,
+                    },
+                });
+
+                // Send email notification
+                try {
+                    const User = (await import("@/database/user.model")).default;
+                    const user = await User.findById(booking.userId);
+                    if (user && user.email && event) {
+                        const { sendEmail, emailTemplates } = await import("@/lib/email");
+                        const emailContent = emailTemplates.bookingConfirmation(
+                            event.title,
+                            formatDateToReadable(event.date),
+                            formatDateTo12Hour(event.time),
+                            ticket?.ticketNumber || ''
+                        );
+
+                        await sendEmail({
+                            to: user.email,
+                            subject: emailContent.subject,
+                            html: emailContent.html,
+                        });
+                    }
+                } catch (emailError) {
+                    console.error('Failed to send booking confirmation email:', emailError);
+                }
+
+                console.log('✅ Booking confirmed via checkout_session.payment.paid webhook for payment intent:', paymentIntentId);
+            }
         }
-
-        subscription.status = 'active';
-        await subscription.save();
-
-        console.log('✅ Subscription activated via checkout_session.payment.paid webhook for payment intent:', paymentIntentId);
     } catch (error: any) {
         console.error('Error handling checkout_session.payment.paid webhook:', error);
     }

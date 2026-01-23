@@ -11,8 +11,9 @@ export interface ITransaction extends Document {
     currency: string;
     status: 'pending' | 'completed' | 'failed' | 'refunded' | 'partially_refunded';
     paymentMethod: 'card' | 'bank_transfer' | 'paypal' | 'free';
-    stripePaymentIntentId?: string;
-    stripeChargeId?: string;
+    stripePaymentIntentId?: string; // Legacy Stripe support
+    stripeChargeId?: string; // Legacy Stripe support
+    paymongoPaymentIntentId?: string; // PayMongo payment intent ID
     refundAmount?: number; // Refunded amount in cents
     refundedAt?: Date;
     promoCodeId?: Types.ObjectId;
@@ -77,6 +78,11 @@ const transactionSchema = new Schema<ITransaction>(
             type: String,
             trim: true,
         },
+        paymongoPaymentIntentId: {
+            type: String,
+            trim: true,
+            sparse: true,
+        },
         refundAmount: {
             type: Number,
             min: [0, 'Refund amount cannot be negative'],
@@ -123,6 +129,7 @@ transactionSchema.index({ eventId: 1 });
 transactionSchema.index({ bookingId: 1 });
 transactionSchema.index({ status: 1 });
 transactionSchema.index({ stripePaymentIntentId: 1 }, { unique: true, sparse: true });
+transactionSchema.index({ paymongoPaymentIntentId: 1 }, { unique: true, sparse: true });
 
 const Transaction = mongoose.models.Transaction || mongoose.model<ITransaction>('Transaction', transactionSchema);
 export default Transaction;

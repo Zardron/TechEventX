@@ -119,7 +119,7 @@ export default function NotificationsPage() {
     };
 
     const handleMarkAllAsRead = () => {
-        markAsReadMutation.mutate();
+        markAsReadMutation.mutate(undefined);
     };
 
     const handleDeleteNotification = (notificationId: string) => {

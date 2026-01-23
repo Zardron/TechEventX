@@ -129,8 +129,8 @@ export default function MyApplicationsPage() {
                                         )}
                                         <p className="text-sm text-muted-foreground mb-3">
                                             Applied: {formatDateToReadable(
-                                                application.createdAt instanceof Date
-                                                    ? application.createdAt.toISOString()
+                                                application.createdAt && typeof application.createdAt === 'object' && 'toISOString' in application.createdAt
+                                                    ? (application.createdAt as Date).toISOString()
                                                     : String(application.createdAt)
                                             )}
                                         </p>

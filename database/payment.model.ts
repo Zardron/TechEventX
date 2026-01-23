@@ -10,9 +10,10 @@ export interface IPayment extends Document {
     currency: string;
     status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'canceled';
     paymentMethod: 'card' | 'bank_transfer' | 'paypal' | 'gcash' | 'paymaya' | 'grabpay' | 'qr' | 'other';
-    stripePaymentIntentId?: string;
-    stripeChargeId?: string;
-    receiptUrl?: string; // For manual payment receipts
+    stripePaymentIntentId?: string; // Legacy Stripe support
+    stripeChargeId?: string; // Legacy Stripe support
+    paymongoPaymentIntentId?: string; // PayMongo payment intent ID
+    receiptUrl?: string; // For manual payment receipts (legacy)
     description?: string;
     metadata?: Record<string, any>;
     paidAt?: Date;
@@ -75,6 +76,11 @@ const paymentSchema = new Schema<IPayment>(
             type: String,
             trim: true,
         },
+        paymongoPaymentIntentId: {
+            type: String,
+            trim: true,
+            sparse: true,
+        },
         receiptUrl: {
             type: String,
             trim: true,
@@ -108,6 +114,7 @@ paymentSchema.index({ bookingId: 1 });
 paymentSchema.index({ status: 1 });
 paymentSchema.index({ userId: 1, eventId: 1 });
 paymentSchema.index({ stripePaymentIntentId: 1 }, { unique: true, sparse: true });
+paymentSchema.index({ paymongoPaymentIntentId: 1 }, { unique: true, sparse: true });
 
 const Payment = mongoose.models.Payment || mongoose.model<IPayment>('Payment', paymentSchema);
 export default Payment;

@@ -228,6 +228,9 @@ export default function SettingsPage() {
             platformDescription: "Your premier destination for tech events and networking",
             contactEmail: "contact@techeventx.com",
             supportEmail: "support@techeventx.com",
+            platformFeePercentage: "5",
+            minimumPayoutAmount: "10.00",
+            currency: "php",
             minPasswordLength: "8",
             requireUppercase: "true",
             requireLowercase: "true",
@@ -249,8 +252,7 @@ export default function SettingsPage() {
             maxFileUploadSize: "10",
         });
         setErrors({});
-        toast.info("Settings Reset", {
-            description: "All settings have been reset to default values.",
+        toast.success("Settings Reset - All settings have been reset to default values.", {
             duration: 3000,
         });
     };

@@ -71,7 +71,7 @@ export const useCreateBooking = () => {
     const router = useRouter();
 
     return useMutation({
-        mutationFn: async (data: { eventSlug: string; paymentMethod?: string; receiptUrl?: string }) => {
+        mutationFn: async (data: { eventSlug: string; paymentMethod?: string; receiptUrl?: string; paymentIntentId?: string }) => {
             if (!token) {
                 router.push('/sign-in');
                 throw new Error('Not authenticated');

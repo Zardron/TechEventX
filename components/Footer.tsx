@@ -22,7 +22,7 @@ const Footer = () => {
 
     // Calculate organizer count from events data
     const organizerCount = eventsData?.events && eventsData.events.length > 0
-        ? formatOrganizerCount(new Set(eventsData.events.map((event: IEvent) => event.organizer)).size)
+        ? formatOrganizerCount(new Set(eventsData.events.map((event: any) => event.organizer)).size)
         : "5+";
 
     const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

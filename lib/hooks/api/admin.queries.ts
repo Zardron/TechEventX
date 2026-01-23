@@ -17,9 +17,9 @@ export interface DashboardStatistics {
         organizer?: number;
     };
     modeDistribution: {
-        online?: number;
-        offline?: number;
-        hybrid?: number;
+        Virtual?: number;
+        Onsite?: number;
+        Hybrid?: number;
     };
     eventsOverTime: Array<{
         month: string;

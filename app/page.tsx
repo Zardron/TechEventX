@@ -22,7 +22,7 @@ const Page = () => {
 
   // Calculate unique organizers count
   const uniqueOrganizers = events && events.length > 0
-    ? new Set(events.map((event: IEvent) => event.organizer)).size
+    ? new Set(events.map((event: any) => event.organizer)).size
     : 0;
   const organizerCount = formatOrganizerCount(uniqueOrganizers);
 
@@ -473,7 +473,7 @@ const Page = () => {
           </div>
           <OrganizerSlider
             organizers={featuredEvents.length > 0
-              ? (Array.from(new Set(featuredEvents.map((event: IEvent) => event.organizer))) as string[])
+              ? (Array.from(new Set(featuredEvents.map((event: any) => event.organizer))) as string[])
               : []
             }
           />

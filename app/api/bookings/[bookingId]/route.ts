@@ -388,15 +388,12 @@ export async function DELETE(
         try {
             const { sendEmail, emailTemplates } = await import("@/lib/email");
             
-            const emailContent = emailTemplates.bookingCancellation?.(
+            const emailContent = emailTemplates.bookingCancellation(
                 event.title,
                 formatDateToReadable(event.date),
                 formatDateTo12Hour(event.time),
                 transaction && transaction.amount > 0
-            ) || {
-                subject: `Booking Cancelled: ${event.title}`,
-                html: `<p>Your booking for ${event.title} has been cancelled.</p>`
-            };
+            );
 
             await sendEmail({
                 to: user.email,

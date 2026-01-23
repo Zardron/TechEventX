@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { verifyToken } from "@/lib/auth";
 import User from "@/database/user.model";
-import Event from "@/database/event.model";
+import Event, { IEvent } from "@/database/event.model";
 import Organizer from "@/database/organizer.model";
 import { handleApiError, handleSuccessResponse } from "@/lib/utils";
 
@@ -117,7 +117,7 @@ export async function POST(
         }
         duplicateData.slug = slug;
 
-        const duplicatedEvent = await Event.create(duplicateData);
+        const duplicatedEvent = (await Event.create(duplicateData)) as unknown as IEvent;
 
         return handleSuccessResponse("Event duplicated successfully", {
             event: {

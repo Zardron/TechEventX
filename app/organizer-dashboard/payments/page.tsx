@@ -195,7 +195,7 @@ export default function PaymentsPage() {
                 <div>
                     <h1 className="text-3xl font-bold">Payments</h1>
                     <p className="text-muted-foreground mt-2">
-                        Request payments for your event revenue
+                        Request payouts for your event revenue
                     </p>
                 </div>
                 <Button
@@ -203,12 +203,12 @@ export default function PaymentsPage() {
                     disabled={payoutData.availableBalance < 1000}
                 >
                     <Plus className="w-4 h-4 mr-2" />
-                    Request Payment
+                    Request Payout
                 </Button>
             </div>
 
             {/* Balance Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-3">
                 <div className="p-6 border rounded-md bg-card">
                     <div className="flex items-center justify-between mb-2">
                         <p className="text-sm text-muted-foreground">Available Balance</p>
@@ -224,14 +224,6 @@ export default function PaymentsPage() {
                     </div>
                     <p className="text-2xl font-bold">{formatPrice(payoutData.totalEarned)}</p>
                     <p className="text-xs text-muted-foreground mt-1">All time revenue</p>
-                </div>
-                <div className="p-6 border rounded-md bg-card">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm text-muted-foreground">Total Paid</p>
-                        <CreditCard className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <p className="text-2xl font-bold">{formatPrice(payoutData.totalPaid)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Paid out</p>
                 </div>
                 <div className="p-6 border rounded-md bg-card">
                     <div className="flex items-center justify-between mb-2">

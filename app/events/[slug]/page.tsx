@@ -71,8 +71,9 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
     // Update favorite status
     useEffect(() => {
         if (favoritesData?.data?.favorites && eventData?.event) {
+            const eventId = (eventData.event as any).id || (eventData.event as any)._id?.toString() || (eventData.event as any)._id;
             const favorited = favoritesData.data.favorites.some(
-                (f: any) => f.id === eventData.event.id
+                (f: any) => (f.id || f._id?.toString() || f._id) === eventId
             );
             setIsFavorited(favorited);
         }
@@ -82,8 +83,9 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
     const toggleFavoriteMutation = useMutation({
         mutationFn: async (eventId: string) => {
             if (!token) throw new Error("Not authenticated");
+            let response: Response;
             if (isFavorited) {
-                const response = await fetch(`/api/users/favorites?eventId=${eventId}`, {
+                response = await fetch(`/api/users/favorites?eventId=${eventId}`, {
                     method: "DELETE",
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -92,7 +94,7 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
                     throw new Error(data.message || "Failed to remove favorite");
                 }
             } else {
-                const response = await fetch("/api/users/favorites", {
+                response = await fetch("/api/users/favorites", {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -154,8 +156,9 @@ const EventDetailsPage = ({ params }: { params: Promise<{ slug: string }> }) => 
 
     const { event } = eventData;
     console.log("🟢 PAGE: Event data:", event);
-    console.log("🟢 PAGE: Organizer field:", event?.organizer);
-    const { title, description, overview, image, venue, location, date, time, mode, audience, agenda, organizer, tags, isFree, price, currency } = event;
+    const eventObj = event as any;
+    console.log("🟢 PAGE: Organizer field:", eventObj?.organizer);
+    const { title, description, overview, image, venue, location, date, time, mode, audience, agenda, organizer, tags, isFree, price, currency } = eventObj;
     
     // Extract organizer name (handle cases where organizer field contains descriptions)
     const getOrganizerName = (organizerText: string): string => {

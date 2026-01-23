@@ -368,7 +368,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         const eventsByMode = await Event.aggregate([
             {
                 $match: {
-                    mode: { $exists: true, $ne: null, $ne: '' }
+                    $and: [
+                        { mode: { $exists: true } },
+                        { mode: { $ne: null } },
+                        { mode: { $ne: '' } }
+                    ]
                 }
             },
             {

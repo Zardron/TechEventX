@@ -152,6 +152,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         console.log(`📅 Event found: ${event.title} (${event._id}), organizerId: ${event.organizerId || 'NOT SET'}`);
 
         // Check if user already booked this event (by userId, fallback to email)
+        // Use a more robust check to prevent duplicates, including checking for bookings created in the last few seconds
         const existingBooking = await Booking.findOne({
             eventId: event._id,
             $or: [
@@ -165,6 +166,46 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 { message: "You have already booked this event" },
                 { status: 400 }
             );
+        }
+
+        // Additional check: if paymentIntentId is provided, check if a booking with this payment intent already exists
+        // This prevents duplicate bookings from the same payment intent
+        // Use both Transaction and Payment collections to catch duplicates
+        if (paymentIntentId) {
+            const Transaction = (await import("@/database/transaction.model")).default;
+            const Payment = (await import("@/database/payment.model")).default;
+            
+            // Check transactions
+            const existingTransaction = await Transaction.findOne({
+                paymongoPaymentIntentId: paymentIntentId,
+                eventId: event._id
+            });
+
+            if (existingTransaction && existingTransaction.bookingId) {
+                const existingBookingByPayment = await Booking.findById(existingTransaction.bookingId);
+                if (existingBookingByPayment) {
+                    return NextResponse.json(
+                        { message: "Booking already exists for this payment" },
+                        { status: 400 }
+                    );
+                }
+            }
+            
+            // Also check payments collection
+            const existingPayment = await Payment.findOne({
+                paymongoPaymentIntentId: paymentIntentId,
+                eventId: event._id
+            });
+            
+            if (existingPayment && existingPayment.bookingId) {
+                const existingBookingByPayment = await Booking.findById(existingPayment.bookingId);
+                if (existingBookingByPayment) {
+                    return NextResponse.json(
+                        { message: "Booking already exists for this payment" },
+                        { status: 400 }
+                    );
+                }
+            }
         }
 
         // Check capacity - only count confirmed bookings
@@ -210,10 +251,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         // Check if event requires payment
         if (!event.isFree && event.price) {
-            // For manual payment methods (not Stripe), require payment method and receipt
-            if (!paymentIntentId && (!paymentMethod || !receiptUrl)) {
+            // For paid events, require payment intent (PayMongo)
+            if (!paymentIntentId) {
                 return NextResponse.json(
-                    { message: "Payment method and receipt are required for this event" },
+                    { message: "Payment is required for this event" },
                     { status: 400 }
                 );
             }
@@ -263,24 +304,106 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 promoCodeId,
             };
 
-            // Handle Stripe payment
+            // Handle PayMongo payment
             if (paymentIntentId) {
-                const { stripe } = await import("@/lib/stripe");
+                const { getPaymentIntent, getPaymentsForIntent } = await import("@/lib/paymongo");
                 
-                // Verify payment intent
-                const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+                // Verify payment intent from PayMongo
+                const paymentIntent = await getPaymentIntent(paymentIntentId);
                 
-                if (paymentIntent.status !== 'succeeded') {
+                if (!paymentIntent || !paymentIntent.attributes) {
                     return NextResponse.json(
-                        { message: "Payment not completed" },
+                        { message: "Invalid payment intent" },
                         { status: 400 }
                     );
                 }
 
-                transactionData.status = 'completed';
-                transactionData.paymentMethod = 'card';
-                transactionData.stripePaymentIntentId = paymentIntentId;
-                transactionData.stripeChargeId = paymentIntent.latest_charge as string;
+                // Check payment status
+                const paymentStatus = paymentIntent.attributes.status;
+                if (paymentStatus !== 'succeeded' && paymentStatus !== 'awaiting_payment_method') {
+                    // For PayMongo, we might get 'awaiting_payment_method' if checkout is still in progress
+                    // But if it's explicitly failed or cancelled, reject
+                    if (paymentStatus === 'failed' || paymentStatus === 'cancelled') {
+                        return NextResponse.json(
+                            { message: "Payment failed or was cancelled" },
+                            { status: 400 }
+                        );
+                    }
+                }
+
+                // Get payment method from intent metadata or payment
+                // IMPORTANT: Check payment intent attributes first, then payments
+                // Store detected payment method for reuse in booking and payment records
+                let detectedPayMongoMethod: 'card' | 'gcash' | 'grab_pay' | 'paymaya' = 'card';
+                let hasSuccessfulPayment = false;
+                const payments = await getPaymentsForIntent(paymentIntentId);
+                
+                // First, try to get payment method from payment intent's payment_method_allowed
+                const paymentMethodAllowed = paymentIntent.attributes?.payment_method_allowed || [];
+                if (paymentMethodAllowed.length > 0) {
+                    // PayMongo returns array like ['gcash', 'card', 'grab_pay']
+                    if (paymentMethodAllowed.includes('gcash')) {
+                        detectedPayMongoMethod = 'gcash';
+                    } else if (paymentMethodAllowed.includes('grab_pay')) {
+                        detectedPayMongoMethod = 'grab_pay';
+                    } else if (paymentMethodAllowed.includes('paymaya')) {
+                        detectedPayMongoMethod = 'paymaya';
+                    } else if (paymentMethodAllowed.includes('card')) {
+                        detectedPayMongoMethod = 'card';
+                    }
+                }
+                
+                // Then check actual payments (more accurate if payment completed)
+                if (payments && payments.length > 0) {
+                    // Find the most recent successful payment
+                    const successfulPayment = payments.find((p: any) => {
+                        const pStatus = p.attributes?.status || p.status;
+                        return pStatus === 'paid' || pStatus === 'succeeded';
+                    }) || payments[0]; // Fallback to first payment if none succeeded yet
+                    
+                    if (successfulPayment) {
+                        const paymentMethod = successfulPayment.attributes?.payment_method;
+                        if (paymentMethod) {
+                            const methodType = paymentMethod.attributes?.type;
+                            if (methodType === 'gcash') detectedPayMongoMethod = 'gcash';
+                            else if (methodType === 'grab_pay') detectedPayMongoMethod = 'grab_pay';
+                            else if (methodType === 'paymaya') detectedPayMongoMethod = 'paymaya';
+                            else if (methodType === 'card') detectedPayMongoMethod = 'card';
+                        }
+                        
+                        // Check if any payment succeeded
+                        hasSuccessfulPayment = payments.some((p: any) => {
+                            const pStatus = p.attributes?.status || p.status;
+                            return pStatus === 'paid' || pStatus === 'succeeded';
+                        });
+                    }
+                }
+
+                // Map PayMongo payment method to transaction payment method enum
+                let transactionPaymentMethod: 'card' | 'bank_transfer' | 'paypal' | 'free' = 'card';
+                if (detectedPayMongoMethod === 'gcash' || detectedPayMongoMethod === 'grab_pay' || detectedPayMongoMethod === 'paymaya') {
+                    transactionPaymentMethod = 'bank_transfer'; // Map e-wallets to bank_transfer for transaction
+                }
+
+                // Set transaction status: completed if payment succeeded (either intent status or actual payment)
+                // This ensures transaction status matches the booking payment status we'll set later
+                const paymentSucceeded = paymentStatus === 'succeeded' || hasSuccessfulPayment;
+                transactionData.status = paymentSucceeded ? 'completed' : 'pending';
+                transactionData.paymentMethod = transactionPaymentMethod;
+                transactionData.paymongoPaymentIntentId = paymentIntentId;
+                
+                // Store payment method in metadata for reference
+                transactionData.metadata = {
+                    ...transactionData.metadata,
+                    paymongoPaymentMethod: detectedPayMongoMethod,
+                    eventSlug: event.slug,
+                    eventTitle: event.title,
+                };
+                
+                // Store payment intent and detected method for later use in booking creation
+                (transactionData as any)._paymentIntent = paymentIntent;
+                (transactionData as any)._detectedPayMongoMethod = detectedPayMongoMethod;
+                (transactionData as any)._hasSuccessfulPayment = hasSuccessfulPayment;
             } 
             // Handle manual payment (with receipt)
             else if (paymentMethod && receiptUrl) {
@@ -311,26 +434,101 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             email: user.email
         };
 
-        // For paid events with manual payment (not Stripe), set payment status to pending
-        if (!event.isFree && event.price && paymentMethod && receiptUrl && !paymentIntentId) {
+        // For paid events with PayMongo payment, payment status will be determined by payment intent status
+        // If payment is succeeded, booking is confirmed. Otherwise, it's pending.
+        // IMPORTANT: When user is redirected back from PayMongo, the payment intent status might
+        // still be 'awaiting_payment_method' even though payment succeeded. We need to check
+        // the actual payments associated with the intent to determine if payment succeeded.
+        // Also store payment method in booking for reference
+        if (!event.isFree && event.price && paymentIntentId) {
+            // Reuse payment intent and detected method from transactionData if available
+            const paymentIntent = (transactionData as any)?._paymentIntent;
+            const detectedPayMongoMethod = (transactionData as any)?._detectedPayMongoMethod;
+            const hasSuccessfulPayment = (transactionData as any)?._hasSuccessfulPayment;
+            
+            if (paymentIntent && paymentIntent.attributes) {
+                const intentStatus = paymentIntent.attributes.status;
+                
+                // Store payment method in booking (map PayMongo method to booking method)
+                if (detectedPayMongoMethod) {
+                    // Map PayMongo method names to booking payment method names
+                    if (detectedPayMongoMethod === 'gcash') bookingData.paymentMethod = 'gcash';
+                    else if (detectedPayMongoMethod === 'grab_pay') bookingData.paymentMethod = 'grabpay';
+                    else if (detectedPayMongoMethod === 'paymaya') bookingData.paymentMethod = 'paymaya';
+                    else if (detectedPayMongoMethod === 'card') bookingData.paymentMethod = 'card';
+                }
+                
+                // Check if payment intent status is succeeded
+                if (intentStatus === 'succeeded') {
+                    bookingData.paymentStatus = 'confirmed';
+                } else {
+                    // Even if intent status is not 'succeeded', check if there are successful payments
+                    // This handles the case where user completed payment but PayMongo hasn't updated intent status yet
+                    
+                    // Also check if there are no errors (indicates payment likely succeeded)
+                    const hasNoErrors = !paymentIntent.attributes.last_payment_error && 
+                                       !paymentIntent.attributes.errors &&
+                                       intentStatus !== 'failed' &&
+                                       intentStatus !== 'canceled';
+                    
+                    // If we have a successful payment OR no errors and status is processing/awaiting, 
+                    // mark as confirmed (payment likely succeeded, just status not updated yet)
+                    if (hasSuccessfulPayment || (hasNoErrors && (intentStatus === 'processing' || intentStatus === 'awaiting_payment_method'))) {
+                        bookingData.paymentStatus = 'confirmed';
+                    } else {
+                        // For other states, set as pending - webhook will update when payment succeeds
+                        bookingData.paymentStatus = 'pending';
+                    }
+                }
+            } else {
+                // If we can't verify payment intent, set as pending
+                bookingData.paymentStatus = 'pending';
+            }
+        } else if (!event.isFree && event.price && paymentMethod && receiptUrl) {
+            // Manual payment - pending verification
             bookingData.paymentStatus = 'pending';
-            bookingData.paymentMethod = paymentMethod;
             bookingData.receiptUrl = receiptUrl;
+            bookingData.paymentMethod = paymentMethod;
         }
+        // For free events, paymentStatus remains undefined (which is correct)
 
         const booking = new Booking(bookingData);
         await booking.save();
 
         // Create transaction after booking is created (for both Stripe and manual payments)
+        // Use try-catch to handle duplicate key errors from unique index
         let transaction: any = null;
         if (transactionData) {
-            const createdTransaction = await Transaction.create({
-                ...transactionData,
-                bookingId: booking._id, // Now we have the booking ID
-            });
-            // Handle both single document and array returns
-            transaction = Array.isArray(createdTransaction) ? createdTransaction[0] : createdTransaction;
-            console.log(`✅ Transaction created: ${transaction?._id} for booking ${booking._id} with status: ${transaction?.status}`);
+            try {
+                const createdTransaction = await Transaction.create({
+                    ...transactionData,
+                    bookingId: booking._id, // Now we have the booking ID
+                });
+                // Handle both single document and array returns
+                transaction = Array.isArray(createdTransaction) ? createdTransaction[0] : createdTransaction;
+                console.log(`✅ Transaction created: ${transaction?._id} for booking ${booking._id} with status: ${transaction?.status}`);
+            } catch (transactionError: any) {
+                // Handle duplicate key error (E11000) - transaction already exists for this payment intent
+                if (transactionError.code === 11000) {
+                    console.warn(`⚠️ Duplicate transaction detected for payment intent: ${paymentIntentId}`);
+                    // Find existing transaction
+                    transaction = await Transaction.findOne({
+                        paymongoPaymentIntentId: paymentIntentId,
+                        eventId: event._id
+                    });
+                    if (transaction && transaction.bookingId?.toString() !== booking._id.toString()) {
+                        // Different booking - this is a duplicate, rollback booking
+                        await Booking.findByIdAndDelete(booking._id);
+                        return NextResponse.json(
+                            { message: "Booking already exists for this payment" },
+                            { status: 400 }
+                        );
+                    }
+                } else {
+                    // Other error - log and continue (don't fail booking creation)
+                    console.error('❌ Error creating transaction:', transactionError);
+                }
+            }
         }
 
         // Create payment record for all paid events
@@ -343,9 +541,44 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 
                 // Determine payment status and method
                 if (paymentIntentId) {
-                    // Stripe payment - succeeded
-                    paymentStatus = 'succeeded';
-                    paymentMethodType = 'card';
+                    // PayMongo payment - check status from payment intent
+                    const { getPaymentIntent, getPaymentsForIntent } = await import("@/lib/paymongo");
+                    const paymentIntent = await getPaymentIntent(paymentIntentId);
+                    
+                    if (paymentIntent && paymentIntent.attributes) {
+                        const intentStatus = paymentIntent.attributes.status;
+                        paymentStatus = intentStatus === 'succeeded' ? 'succeeded' : 'pending';
+                        
+                        // Reuse detected payment method from transactionData if available
+                        const detectedPayMongoMethod = (transactionData as any)?._detectedPayMongoMethod;
+                        if (detectedPayMongoMethod) {
+                            // Map PayMongo method names to Payment model method names
+                            if (detectedPayMongoMethod === 'gcash') paymentMethodType = 'gcash';
+                            else if (detectedPayMongoMethod === 'grab_pay') paymentMethodType = 'grabpay';
+                            else if (detectedPayMongoMethod === 'paymaya') paymentMethodType = 'paymaya';
+                            else if (detectedPayMongoMethod === 'card') paymentMethodType = 'card';
+                        } else {
+                            // Fallback: Get payment method from payments (shouldn't happen if transactionData exists)
+                            const payments = await getPaymentsForIntent(paymentIntentId);
+                            if (payments && payments.length > 0) {
+                                const successfulPayment = payments.find((p: any) => {
+                                    const pStatus = p.attributes?.status || p.status;
+                                    return pStatus === 'paid' || pStatus === 'succeeded';
+                                }) || payments[0];
+                                
+                                const paymentMethodAttr = successfulPayment.attributes?.payment_method;
+                                if (paymentMethodAttr) {
+                                    const methodType = paymentMethodAttr.attributes?.type;
+                                    if (methodType === 'gcash') paymentMethodType = 'gcash';
+                                    else if (methodType === 'grab_pay') paymentMethodType = 'grabpay';
+                                    else if (methodType === 'paymaya') paymentMethodType = 'paymaya';
+                                    else if (methodType === 'card') paymentMethodType = 'card';
+                                }
+                            }
+                        }
+                    } else {
+                        paymentStatus = 'pending';
+                    }
                 } else if (paymentMethod && receiptUrl) {
                     // Manual payment - pending verification
                     paymentStatus = 'pending';
@@ -375,29 +608,41 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 const paymentAmount = finalAmount || (event.price || 0);
 
                 // Create payment record
-                const payment = await Payment.create({
-                    eventId: event._id,
-                    bookingId: booking._id,
-                    userId: user._id,
-                    amount: paymentAmount,
-                    currency: event.currency || 'php',
-                    status: paymentStatus,
-                    paymentMethod: paymentMethodType,
-                    stripePaymentIntentId: paymentIntentId || undefined,
-                    stripeChargeId: (transaction && typeof transaction === 'object' && 'stripeChargeId' in transaction) ? transaction.stripeChargeId : undefined,
-                    receiptUrl: receiptUrl || undefined,
-                    description: `Payment for event: ${event.title}`,
-                    metadata: {
-                        eventSlug: event.slug,
-                        eventTitle: event.title,
-                        promoCode: promoCode || null,
-                        originalEventPrice: event.price || 0, // Store original event price for reference
-                        discountAmount: transactionData?.discountAmount || 0, // Store discount amount if applicable
-                    },
-                    paidAt: paymentStatus === 'succeeded' ? new Date() : undefined,
-                });
+                // Use try-catch to handle duplicate key errors
+                try {
+                    const payment = await Payment.create({
+                        eventId: event._id,
+                        bookingId: booking._id,
+                        userId: user._id,
+                        amount: paymentAmount,
+                        currency: event.currency || 'php',
+                        status: paymentStatus,
+                        paymentMethod: paymentMethodType,
+                        paymongoPaymentIntentId: paymentIntentId || undefined,
+                        receiptUrl: receiptUrl || undefined,
+                        description: `Payment for event: ${event.title}`,
+                        metadata: {
+                            eventSlug: event.slug,
+                            eventTitle: event.title,
+                            promoCode: promoCode || null,
+                            originalEventPrice: event.price || 0, // Store original event price for reference
+                            discountAmount: transactionData?.discountAmount || 0, // Store discount amount if applicable
+                        },
+                        paidAt: paymentStatus === 'succeeded' ? new Date() : undefined,
+                    });
 
-                console.log(`✅ Payment created: ${payment._id} for booking ${booking._id} with status: ${paymentStatus}`);
+                    console.log(`✅ Payment created: ${payment._id} for booking ${booking._id} with status: ${paymentStatus}`);
+                } catch (paymentError: any) {
+                    // Handle duplicate key error (E11000) - payment already exists for this payment intent
+                    if (paymentError.code === 11000) {
+                        console.warn(`⚠️ Duplicate payment detected for payment intent: ${paymentIntentId}`);
+                        // If transaction was created but payment failed due to duplicate, that's okay
+                        // The existing payment record will be used
+                    } else {
+                        // Log other errors but don't fail the booking creation
+                        console.error('❌ Error creating payment record:', paymentError);
+                    }
+                }
             } catch (paymentError) {
                 // Log error but don't fail the booking creation
                 console.error('❌ Error creating payment record:', paymentError);
@@ -405,10 +650,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             }
         }
 
-        // Generate ticket only if payment is confirmed (free events or Stripe payments)
-        // For manual payments, ticket will be generated after payment confirmation
+        // Generate ticket only if payment is confirmed (free events or PayMongo payments that succeeded)
+        // For pending payments, ticket will be generated after payment confirmation
         let ticket = null;
-        if (event.isFree || paymentIntentId || !paymentMethod) {
+        // Check if payment succeeded: either free event, or payment intent succeeded, or transaction completed
+        const paymentSucceeded = event.isFree || 
+                                  (paymentIntentId && booking.paymentStatus === 'confirmed') ||
+                                  (transactionData?.status === 'completed');
+        const shouldGenerateTicket = paymentSucceeded;
+        if (shouldGenerateTicket) {
             const Ticket = (await import("@/database/ticket.model")).default;
             const { generateTicketNumber } = await import("@/lib/tickets");
             

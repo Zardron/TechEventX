@@ -90,6 +90,7 @@ export default function CheckInHistoryPage() {
             <div className="flex items-center gap-4">
                 <div className="flex-1 max-w-md">
                     <FormSelect
+                        label="Filter by Event"
                         value={selectedEventId}
                         onChange={(e) => setSelectedEventId(e.target.value)}
                         options={[
@@ -99,7 +100,6 @@ export default function CheckInHistoryPage() {
                                 label: event.title,
                             })),
                         ]}
-                        placeholder="Select an event"
                     />
                 </div>
             </div>

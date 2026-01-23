@@ -168,6 +168,7 @@ export default function AdminPaymentsPage() {
                     </p>
                 </div>
                 <FormSelect
+                    label="Filter by Status"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     options={[

@@ -99,7 +99,7 @@ export default function WaitlistPage() {
                                 label: event.title,
                             })),
                         ]}
-                        placeholder="Select an event"
+                        label="Filter by Event"
                     />
                 </div>
             </div>

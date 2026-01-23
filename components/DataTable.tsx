@@ -73,8 +73,8 @@ export function DataTable<T extends Record<string, any>>({
                     if (!value) return false;
                     
                     // Handle date objects - format them for better searchability
-                    if (value instanceof Date || (typeof value === 'object' && value !== null && 'getTime' in value)) {
-                        const date = new Date(value);
+                    if (typeof value === 'object' && value !== null && 'getTime' in value) {
+                        const date = new Date(value as Date);
                         const dateStr = date.toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "short",
@@ -84,8 +84,7 @@ export function DataTable<T extends Record<string, any>>({
                         return dateStr.includes(searchLower) || isoStr.includes(searchLower);
                     }
                     
-                    return value
-                        ?.toString()
+                    return String(value || '')
                         .toLowerCase()
                         .includes(searchLower);
                 });
