@@ -30,7 +30,6 @@ const transactionSchema = new Schema<ITransaction>(
             type: Schema.Types.ObjectId,
             ref: 'Booking',
             required: [true, 'Booking ID is required'],
-            index: true,
         },
         userId: {
             type: Schema.Types.ObjectId,

@@ -26,10 +26,8 @@ const promoCodeSchema = new Schema<IPromoCode>(
         code: {
             type: String,
             required: [true, 'Promo code is required'],
-            unique: true,
             trim: true,
             uppercase: true,
-            index: true,
         },
         description: {
             type: String,

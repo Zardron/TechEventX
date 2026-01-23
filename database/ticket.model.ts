@@ -19,7 +19,6 @@ const ticketSchema = new Schema<ITicket>(
             type: Schema.Types.ObjectId,
             ref: 'Booking',
             required: [true, 'Booking ID is required'],
-            index: true,
         },
         ticketNumber: {
             type: String,

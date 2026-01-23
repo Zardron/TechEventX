@@ -35,7 +35,6 @@ const paymentSchema = new Schema<IPayment>(
         bookingId: {
             type: Schema.Types.ObjectId,
             ref: 'Booking',
-            index: true,
         },
         userId: {
             type: Schema.Types.ObjectId,
